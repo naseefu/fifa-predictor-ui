@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { adminGetAllMatches, adminCreateMatch, adminSubmitResult } from '@/lib/api';
-import type { MatchResponse } from '@/lib/api';
+import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminGetAllUsers, adminApproveUser, adminRemoveUser } from '@/lib/api';
+import type { MatchResponse, UserResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin } from '@/lib/auth';
 import { TEAM_LIST, getFlag } from '@/lib/teams';
 
@@ -16,10 +16,17 @@ function formatDT(iso: string) {
 export default function AdminDashboardPage() {
   const router = useRouter();
 
+  const [activeTab, setActiveTab] = useState<'matches'|'users'>('matches');
+
   // Match list
   const [matches,  setMatches]  = useState<MatchResponse[]>([]);
   const [loadingM, setLoadingM] = useState(true);
   const [listErr,  setListErr]  = useState('');
+
+  // User list
+  const [users, setUsers] = useState<UserResponse[]>([]);
+  const [loadingU, setLoadingU] = useState(true);
+  const [userErr, setUserErr] = useState('');
 
   // Create form
   const [teamA,     setTeamA]     = useState('');
@@ -38,6 +45,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!isLoggedIn() || !isAdmin()) { router.push('/login'); return; }
     loadMatches();
+    loadUsers();
   }, []);
 
   async function loadMatches() {
@@ -49,6 +57,38 @@ export default function AdminDashboardPage() {
       setListErr(e.message || 'Failed to load matches.');
     } finally {
       setLoadingM(false);
+    }
+  }
+
+  async function loadUsers() {
+    setLoadingU(true); setUserErr('');
+    try {
+      const data = await adminGetAllUsers();
+      setUsers(data);
+    } catch (e: any) {
+      setUserErr(e.message || 'Failed to load users.');
+    } finally {
+      setLoadingU(false);
+    }
+  }
+
+  async function handleApproveUser(userId: number) {
+    if (!confirm('Approve this user?')) return;
+    try {
+      await adminApproveUser(userId);
+      await loadUsers();
+    } catch (e: any) {
+      alert(e.message || 'Failed to approve user');
+    }
+  }
+
+  async function handleRemoveUser(userId: number) {
+    if (!confirm('Are you sure you want to permanently delete this user and all their predictions?')) return;
+    try {
+      await adminRemoveUser(userId);
+      await loadUsers();
+    } catch (e: any) {
+      alert(e.message || 'Failed to remove user');
     }
   }
 
@@ -110,7 +150,29 @@ export default function AdminDashboardPage() {
           <p className="page-subtitle">Create matches and submit final scores to trigger scoring.</p>
         </div>
 
-        <div className="admin-grid">
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid var(--border)' }}>
+          <button 
+            onClick={() => setActiveTab('matches')}
+            style={{ 
+              background: 'none', border: 'none', color: activeTab === 'matches' ? 'var(--text)' : 'var(--text-faint)', 
+              fontWeight: 700, padding: '10px 4px', fontSize: '1rem', cursor: 'pointer',
+              borderBottom: activeTab === 'matches' ? '2px solid var(--accent)' : '2px solid transparent'
+            }}>
+            Matches
+          </button>
+          <button 
+            onClick={() => setActiveTab('users')}
+            style={{ 
+              background: 'none', border: 'none', color: activeTab === 'users' ? 'var(--text)' : 'var(--text-faint)', 
+              fontWeight: 700, padding: '10px 4px', fontSize: '1rem', cursor: 'pointer',
+              borderBottom: activeTab === 'users' ? '2px solid var(--accent)' : '2px solid transparent'
+            }}>
+            Users ({users.filter(u => !u.isApprovedByAdmin).length > 0 ? '!' : ''})
+          </button>
+        </div>
+
+        {activeTab === 'matches' && (
+          <div className="admin-grid">
           {/* ── Create Match Form ── */}
           <div className="card admin-form-card">
             <div className="admin-heading">Create New Match</div>
@@ -247,6 +309,73 @@ export default function AdminDashboardPage() {
             {listErr && <div className="error-msg">{listErr}</div>}
           </div>
         </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+             <div style={{ padding:'14px 20px', borderBottom:'1px solid var(--border)', background:'var(--surface-2)' }}>
+                <div className="admin-heading" style={{ marginBottom:0 }}>User Management</div>
+             </div>
+             
+             {loadingU && <div className="spinner-wrap"><div className="spinner" /></div>}
+             {userErr && <div style={{ padding: '20px' }}><div className="error-msg">{userErr}</div></div>}
+             
+             {!loadingU && users.length === 0 && (
+               <div className="empty-state">
+                 <div className="empty-icon">👥</div>
+                 <div>No users found.</div>
+               </div>
+             )}
+
+             {!loadingU && users.length > 0 && (
+               <div style={{ overflowX: 'auto' }}>
+                 <table className="leaderboard-table">
+                   <thead>
+                     <tr>
+                       <th>User</th>
+                       <th>Email</th>
+                       <th>Status</th>
+                       <th className="right">Points</th>
+                       <th className="right">Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {users.map(u => (
+                       <tr key={u.id}>
+                         <td>
+                           <div className="username-cell">{u.username}</div>
+                         </td>
+                         <td>{u.email}</td>
+                         <td>
+                           {!u.isEmailVerified ? (
+                             <span style={{ fontSize: '.75rem', padding: '3px 8px', borderRadius: '99px', background: 'var(--surface-3)', color: 'var(--text-faint)' }}>Unverified</span>
+                           ) : u.isApprovedByAdmin ? (
+                             <span style={{ fontSize: '.75rem', padding: '3px 8px', borderRadius: '99px', background: 'var(--accent-glow2)', color: 'var(--accent)' }}>Approved</span>
+                           ) : (
+                             <span style={{ fontSize: '.75rem', padding: '3px 8px', borderRadius: '99px', background: 'rgba(245,158,11,.15)', color: 'var(--amber)' }}>Pending Approval</span>
+                           )}
+                         </td>
+                         <td className="right points-cell">{u.totalPoints}</td>
+                         <td className="right">
+                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                             {u.isEmailVerified && !u.isApprovedByAdmin && (
+                               <button className="btn-accent-sm" onClick={() => handleApproveUser(u.id)} style={{ padding: '5px 10px', fontSize: '.7rem' }}>
+                                 Approve
+                               </button>
+                             )}
+                             <button className="btn-ghost-sm" onClick={() => handleRemoveUser(u.id)} style={{ padding: '5px 10px', fontSize: '.7rem' }}>
+                               Remove
+                             </button>
+                           </div>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             )}
+          </div>
+        )}
       </main>
     </>
   );

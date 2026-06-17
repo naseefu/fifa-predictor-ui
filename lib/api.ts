@@ -44,6 +44,16 @@ export interface AuthResponse {
   role: string;
 }
 
+export interface UserResponse {
+  id: number;
+  username: string;
+  email: string;
+  totalPoints: number;
+  isEmailVerified: boolean;
+  isApprovedByAdmin: boolean;
+  role: string;
+}
+
 // ── Core fetch wrapper ───────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -170,5 +180,21 @@ export async function adminSubmitResult(
   return apiFetch(`/api/admin/matches/${matchId}/result`, {
     method: 'POST',
     body: JSON.stringify({ teamAScore, teamBScore }),
+  });
+}
+
+export async function adminGetAllUsers(): Promise<UserResponse[]> {
+  return apiFetch('/api/admin/users');
+}
+
+export async function adminApproveUser(userId: number): Promise<void> {
+  return apiFetch(`/api/admin/users/${userId}/approve`, {
+    method: 'POST',
+  });
+}
+
+export async function adminRemoveUser(userId: number): Promise<void> {
+  return apiFetch(`/api/admin/users/${userId}`, {
+    method: 'DELETE',
   });
 }
