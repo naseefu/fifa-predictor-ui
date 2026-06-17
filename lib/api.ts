@@ -68,11 +68,27 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   });
 
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
+    let msg = `HTTP ${res.status} ${res.statusText}`;
     try {
-      const body = await res.json();
-      msg = body?.message || body?.error || JSON.stringify(body) || msg;
-    } catch { /* plain text or empty */ }
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const body = await res.json();
+        msg = body?.message || body?.error || msg;
+      } else {
+        const text = await res.text();
+        if (text && !text.startsWith('<html')) {
+          msg = text;
+        } else if (res.status === 403) {
+          msg = "Access Denied: You don't have permission to perform this action.";
+        } else if (res.status === 401) {
+          if (path.includes('/login')) {
+            msg = "Invalid username or password.";
+          } else {
+            msg = "Session Expired: Please log in again.";
+          }
+        }
+      }
+    } catch { /* keep default message */ }
     throw new Error(msg);
   }
 
