@@ -34,7 +34,7 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <div className="auth-logo-text">⚽ FIFA Predictor</div>
+          <div className="auth-logo-text">⚽ The Final Third</div>
           <div className="auth-logo-sub">Score predictions · Points · Leaderboard</div>
         </div>
 

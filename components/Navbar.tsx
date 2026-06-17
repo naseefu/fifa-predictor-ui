@@ -33,7 +33,7 @@ export default function Navbar() {
         {/* Logo */}
         <div className="navbar-logo" style={{ cursor:'pointer' }}
           onClick={() => router.push(user ? (isAdmin() ? '/admin/dashboard' : '/dashboard') : '/login')}>
-          ⚽ <span>FIFA</span>&nbsp;PREDICTOR
+          ⚽ <span>THE FINAL</span>&nbsp;THIRD
         </div>
 
         {/* Nav links */}

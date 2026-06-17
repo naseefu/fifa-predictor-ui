@@ -31,7 +31,7 @@ export default function LandingPage() {
       {/* ── Navbar ─────────────────────────────────────────────────── */}
       <header className="landing-nav">
         <div className="landing-nav-inner">
-          <div className="landing-logo">⚽ <span>FIFA</span> PREDICTOR</div>
+          <div className="landing-logo">⚽ <span>THE FINAL</span> THIRD</div>
           <div className="landing-nav-actions">
             <button className="lnd-btn-ghost" onClick={() => router.push('/login')}>Sign In</button>
             <button className="lnd-btn-accent" onClick={() => router.push('/register')}>Get Started</button>
@@ -50,7 +50,7 @@ export default function LandingPage() {
           </div>
 
           <div className="hero-content">
-            <div className="hero-badge">🏆 FIFA World Predictor 2026</div>
+            <div className="hero-badge">🏆 The Final Third Predictions</div>
 
             <h1 className="hero-title">
               Predict. Score.<br />
@@ -252,7 +252,7 @@ export default function LandingPage() {
         {/* ── Footer ──────────────────────────────────────────────────── */}
         <footer className="landing-footer">
           <div className="landing-footer-inner">
-            <div className="landing-logo" style={{ fontSize:'.9rem' }}>⚽ <span>FIFA</span> PREDICTOR</div>
+            <div className="landing-logo" style={{ fontSize:'.9rem' }}>⚽ <span>THE FINAL</span> THIRD</div>
             <div style={{ fontSize:'.78rem', color:'var(--text-faint)' }}>
               Predict · Score · Dominate — Built with Spring Boot & Next.js
             </div>
