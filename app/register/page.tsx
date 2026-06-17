@@ -24,7 +24,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await register(username, email, password);
-      setSuccess(res.message || 'OTP sent to your email!');
+      setSuccess(res.message || 'OTP sent to your email! (Please check spam if not found)');
       setStep('OTP');
     } catch (err: any) {
       setError(err.message || 'Registration failed. Try a different username/email.');
@@ -100,7 +100,7 @@ export default function RegisterPage() {
                 placeholder="Enter 6-digit code"
                 value={otpCode} onChange={e => setOtpCode(e.target.value)} required />
               <small style={{ color: 'var(--text-faint)', marginTop: 4, display: 'block' }}>
-                We sent a 6-digit code to {email}. It expires in 10 minutes.
+                We sent a 6-digit code to {email}. It expires in 10 minutes. If you don't see it, <strong>please check your spam folder</strong>.
               </small>
             </div>
             <button className="btn-primary" type="submit" disabled={loading}>
