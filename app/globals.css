@@ -481,11 +481,43 @@ input, select, textarea { font-family: inherit; }
 .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--text); }
 .stat-value.accent { color: var(--accent); }
 
+/* ── Mobile Bottom Nav ──────────────────────────────────────────────────────── */
+.mobile-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(9,9,11,.92); backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mobile-nav-inner {
+  display: flex; justify-content: space-around; padding: 8px 0;
+}
+.mobile-nav-link {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: .65rem; font-weight: 700; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: .05em; transition: color var(--transition);
+}
+.mobile-nav-link:hover, .mobile-nav-link.active { color: var(--text); }
+.mobile-nav-link.active .mobile-nav-icon { color: var(--accent); }
+.mobile-nav-icon { font-size: 1.25rem; margin-bottom: 2px; }
+
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  body { padding-bottom: 70px; } /* Space for bottom nav */
   .admin-grid { grid-template-columns: 1fr; }
   .navbar-links { display: none; }
+  .mobile-nav { display: block; }
+  .navbar-user { display: none; } /* Hide username on small screens to save space */
+  
+  .page { padding: 20px 14px; }
+  
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { min-width: unset; padding: 12px 14px; }
+  
   .match-teams { gap: 6px; }
   .team-name { font-size: .8rem; }
   .team-score-display { font-size: 1.8rem; }
+  .score-field { width: 54px; height: 42px; font-size: 1.2rem; }
+  
+  .auth-card { padding: 28px 20px; }
 }

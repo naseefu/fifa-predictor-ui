@@ -80,10 +80,17 @@ export async function login(username: string, password: string): Promise<AuthRes
   });
 }
 
-export async function register(username: string, password: string): Promise<{ message: string }> {
+export async function register(username: string, email: string, password: string): Promise<{ message: string }> {
   return apiFetch('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, email, password }),
+  });
+}
+
+export async function verifyOtp(username: string, otpCode: string): Promise<{ message: string }> {
+  return apiFetch('/api/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ username, otpCode }),
   });
 }
 

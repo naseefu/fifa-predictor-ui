@@ -4,14 +4,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { getUser, logout, isAdmin } from '@/lib/auth';
 
 const userLinks = [
-  { href: '/dashboard',   label: 'Matches'     },
-  { href: '/history',     label: 'History'     },
-  { href: '/leaderboard', label: 'Leaderboard' },
+  { href: '/dashboard',   label: 'Matches',     icon: '⚽' },
+  { href: '/history',     label: 'History',     icon: '⏱' },
+  { href: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
 ];
 
 const adminLinks = [
-  { href: '/admin/dashboard', label: 'Admin Panel'  },
-  { href: '/leaderboard',     label: 'Leaderboard'  },
+  { href: '/admin/dashboard', label: 'Admin',       icon: '⚙️' },
+  { href: '/leaderboard',     label: 'Leaderboard', icon: '🏆' },
 ];
 
 export default function Navbar() {
@@ -27,7 +27,8 @@ export default function Navbar() {
   const links    = user && isAdmin() ? adminLinks : userLinks;
 
   return (
-    <nav className="navbar">
+    <>
+      <nav className="navbar">
       <div className="navbar-inner">
         {/* Logo */}
         <div className="navbar-logo" style={{ cursor:'pointer' }}
@@ -63,5 +64,22 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+      
+      {/* Mobile Bottom Navigation */}
+      {user && (
+        <div className="mobile-nav">
+          <div className="mobile-nav-inner">
+            {links.map(l => (
+              <div key={l.href}
+                className={`mobile-nav-link ${pathname === l.href ? 'active' : ''}`}
+                onClick={() => router.push(l.href)}>
+                <span className="mobile-nav-icon">{l.icon}</span>
+                <span>{l.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
