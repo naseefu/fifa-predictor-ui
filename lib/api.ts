@@ -79,7 +79,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
         if (text && !text.startsWith('<html')) {
           msg = text;
         } else if (res.status === 403) {
-          msg = "Access Denied: You don't have permission to perform this action.";
+          if (path.includes('/login')) {
+            msg = "Invalid username or password.";
+          } else {
+            msg = "Access Denied: You don't have permission to perform this action.";
+          }
         } else if (res.status === 401) {
           if (path.includes('/login')) {
             msg = "Invalid username or password.";
