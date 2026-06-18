@@ -54,6 +54,14 @@ export interface UserResponse {
   role: string;
 }
 
+export interface CommentResponse {
+  id: number;
+  matchId: number;
+  username: string;
+  content: string;
+  createdAt: string;
+}
+
 // ── Core fetch wrapper ───────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -231,14 +239,6 @@ export async function adminResetScore(userId: number): Promise<void> {
   });
 }
 
-export interface CommentResponse {
-  id: number;
-  matchId: number;
-  username: string;
-  content: string;
-  createdAt: string;
-}
-
 export async function getMatchComments(matchId: number): Promise<CommentResponse[]> {
   return apiFetch(`/api/matches/${matchId}/comments`);
 }
@@ -247,5 +247,12 @@ export async function postMatchComment(matchId: number, content: string): Promis
   return apiFetch(`/api/matches/${matchId}/comments`, {
     method: 'POST',
     body: JSON.stringify({ content }),
+  });
+}
+
+export async function subscribeToPush(subscription: any): Promise<void> {
+  return apiFetch('/api/notifications/subscribe', {
+    method: 'POST',
+    body: JSON.stringify(subscription),
   });
 }

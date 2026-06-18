@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import MatchCard from '@/components/MatchCard';
+import PushSetupComponent from '@/components/PushSetupComponent';
 import { getTodayMatches } from '@/lib/api';
 import type { MatchResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin, getUser } from '@/lib/auth';
@@ -76,6 +77,8 @@ export default function DashboardPage() {
 
         {loading && <div className="spinner-wrap"><div className="spinner" /></div>}
         {error && <div className="error-msg">{error}</div>}
+
+        <PushSetupComponent />
 
         {!loading && matches.length === 0 && (
           <div className="empty-state">
