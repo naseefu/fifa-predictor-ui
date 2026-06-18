@@ -54,6 +54,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
   const isClientLocked = msToLock <= 0;
   const isUrgent      = msToLock > 0 && msToLock < 20 * 60 * 1000; // < 20 min
   const effectiveLocked = match.status === 'LOCKED' || match.status === 'COMPLETED' || isClientLocked;
+  const hasMatchStarted = now >= startTime.getTime();
 
   // Pre-fill with existing prediction
   useEffect(() => {
@@ -166,7 +167,9 @@ export default function MatchCard({ match, onUpdated }: Props) {
         )}
         {effectiveLocked && match.status !== 'COMPLETED' && (
           <div className="lock-message">
-            🔒 Predictions locked — match starting soon
+            {hasMatchStarted 
+              ? '⚽ Match in progress'
+              : '🔒 Predictions locked — match starting soon'}
           </div>
         )}
 
