@@ -2488,11 +2488,11 @@ textarea {
 @media (max-width: 768px) {
   .ff-wrapper {
     padding: 0;
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - 130px);
   }
   
   .ff-page-modern {
-    height: calc(100vh - 60px);
+    height: calc(100vh - 130px);
     border-radius: 0;
     border: none;
   }
