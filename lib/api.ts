@@ -1,6 +1,7 @@
 import { getToken } from './auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const CHAT_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || 'http://localhost:4000';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,6 +182,18 @@ export async function getLatestMatch(): Promise<MatchResponse | null> {
     return data;
   } catch (err) {
     return null;
+  }
+}
+
+export async function getMatchInsight(teamA: string, teamB: string): Promise<string> {
+  try {
+    const res = await fetch(`${CHAT_URL}/insight?teamA=${encodeURIComponent(teamA)}&teamB=${encodeURIComponent(teamB)}`);
+    if (!res.ok) throw new Error('Failed to fetch AI insight');
+    const data = await res.json();
+    return data.insight;
+  } catch (err) {
+    console.error('AI Insight Error:', err);
+    throw err;
   }
 }
 

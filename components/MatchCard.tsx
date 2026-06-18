@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import type { MatchResponse, Winner } from '@/lib/api';
-import { submitPrediction } from '@/lib/api';
+import { submitPrediction, getMatchInsight } from '@/lib/api';
 import { getFlag } from '@/lib/teams';
 import MatchComments from './MatchComments';
 
@@ -44,6 +44,9 @@ export default function MatchCard({ match, onUpdated }: Props) {
   const [isError, setIsError] = useState(false);
   const [localPred, setLocalPred] = useState(match.userPrediction);
 
+  const [insight, setInsight] = useState('');
+  const [insightLoading, setInsightLoading] = useState(false);
+
   // Live countdown tick
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -81,6 +84,18 @@ export default function MatchCard({ match, onUpdated }: Props) {
       setSaving(false);
     }
   }, [match, predWinner, predGD, onUpdated]);
+
+  const handleInsight = useCallback(async () => {
+    setInsightLoading(true);
+    try {
+      const result = await getMatchInsight(match.teamA, match.teamB);
+      setInsight(result);
+    } catch (e) {
+      setInsight('AI Insight unavailable right now.');
+    } finally {
+      setInsightLoading(false);
+    }
+  }, [match]);
 
   // ── Status badge ──────────────────────────────────────────────────────────
   const renderBadge = () => {
@@ -176,7 +191,23 @@ export default function MatchCard({ match, onUpdated }: Props) {
         {/* Prediction form (open only) */}
         {!effectiveLocked && !localPred && (
           <div className="prediction-form">
-            <div className="prediction-label">Your Prediction</div>
+            <div className="prediction-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span>Your Prediction</span>
+              <button 
+                className={`btn-insight ${insightLoading ? 'loading' : ''}`} 
+                onClick={handleInsight} 
+                disabled={insightLoading || !!insight}
+              >
+                {insightLoading ? 'Analyzing...' : '✨ AI Insight'}
+              </button>
+            </div>
+
+            {insight && (
+              <div className="insight-box fade-up">
+                <span style={{ fontSize: '1.2rem', marginRight: 8 }}>🤖</span>
+                <span className="insight-text">{insight}</span>
+              </div>
+            )}
             
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 16 }}>
               <select className="form-input-dark" style={{ width: '150px' }}
