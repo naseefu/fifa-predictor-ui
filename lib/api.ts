@@ -230,3 +230,22 @@ export async function adminResetScore(userId: number): Promise<void> {
     method: 'POST',
   });
 }
+
+export interface CommentResponse {
+  id: number;
+  matchId: number;
+  username: string;
+  content: string;
+  createdAt: string;
+}
+
+export async function getMatchComments(matchId: number): Promise<CommentResponse[]> {
+  return apiFetch(`/api/matches/${matchId}/comments`);
+}
+
+export async function postMatchComment(matchId: number, content: string): Promise<CommentResponse> {
+  return apiFetch(`/api/matches/${matchId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+}

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { MatchResponse, Winner } from '@/lib/api';
 import { submitPrediction } from '@/lib/api';
 import { getFlag } from '@/lib/teams';
+import MatchComments from './MatchComments';
 
 interface Props {
   match: MatchResponse;
@@ -257,6 +258,10 @@ export default function MatchCard({ match, onUpdated }: Props) {
             </div>
           </div>
         )}
+      </div>
+
+      <div style={{ borderTop: '1px solid var(--border)' }}>
+        <MatchComments matchId={match.id} />
       </div>
     </div>
   );
