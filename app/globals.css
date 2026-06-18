@@ -2486,8 +2486,102 @@ textarea {
 }
 
 @media (max-width: 768px) {
-  .ff-wrapper { padding: 10px; }
-  .ff-page-modern { height: calc(100vh - 80px); border-radius: 20px; }
-  .ff-msg-group { max-width: 95%; }
-  .ff-input-area, .ff-header-modern, .ff-messages-modern { padding: 16px; }
+  .ff-wrapper {
+    padding: 0;
+    min-height: calc(100vh - 60px);
+  }
+  
+  .ff-page-modern {
+    height: calc(100vh - 60px);
+    border-radius: 0;
+    border: none;
+  }
+  
+  .ff-header-modern {
+    padding: 16px 20px;
+  }
+  
+  .ff-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    border-radius: 12px;
+  }
+  
+  .ff-title-modern {
+    font-size: 1.3rem;
+  }
+  
+  .ff-subtitle-modern {
+    font-size: 0.75rem;
+  }
+  
+  .btn-push-modern {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .ff-messages-modern {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+  
+  .ff-msg-group {
+    max-width: 90%;
+    gap: 10px;
+  }
+  
+  .ff-avatar-modern {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .ff-msg-content-modern {
+    gap: 4px;
+  }
+  
+  .ff-bubble {
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    border-radius: 14px;
+  }
+  
+  .ff-user-modern {
+    font-size: 0.75rem;
+  }
+  
+  .ff-time-modern {
+    font-size: 0.65rem;
+  }
+  
+  .ff-input-area {
+    padding: 16px;
+  }
+  
+  .ff-form-modern {
+    padding: 4px 4px 4px 16px;
+  }
+  
+  .ff-input-modern {
+    font-size: 0.95rem;
+    padding: 10px 0;
+  }
+  
+  .ff-send-modern {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .ff-send-modern svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mention-dropdown-modern {
+    left: 16px;
+    right: 16px;
+    min-width: unset;
+  }
 }
