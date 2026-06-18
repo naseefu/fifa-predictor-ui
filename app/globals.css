@@ -1463,17 +1463,14 @@ textarea {
 }
 
 @keyframes ballBounce {
-  0% {
-    transform: translateY(-300px) scale(1, 1);
-  }
-
-  25% {
-    transform: translateY(0) scale(1.1, 0.9);
-  }
-
-  40% {
-    transform: translateY(-100px) scale(0.9, 1.1);
-  }
+  0% { transform: translateY(-300px) scale(1, 1); }
+  25% { transform: translateY(0) scale(1.1, 0.9); }
+  40% { transform: translateY(-100px) scale(0.9, 1.1); }
+  55% { transform: translateY(0) scale(1.05, 0.95); }
+  70% { transform: translateY(-30px) scale(0.95, 1.05); }
+  85% { transform: translateY(0) scale(1.02, 0.98); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
 
   .admin-match-row {
     padding: 16px;
