@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+import SplashAnimation from '@/components/SplashAnimation';
+
 export const metadata: Metadata = {
   title: 'The Final Third',
   description: 'Predict match scores, earn points, and compete on the global leaderboard.',
@@ -15,12 +17,28 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icon.svg" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (!sessionStorage.getItem('splash_played')) {
+                  const path = window.location.pathname;
+                  if (path === '/' || path === '/login' || path === '/dashboard') {
+                    document.documentElement.classList.add('show-splash');
+                  }
+                  sessionStorage.setItem('splash_played', 'true');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
       </head>
       <body>
+        <SplashAnimation />
         {children}
         <script
           dangerouslySetInnerHTML={{
