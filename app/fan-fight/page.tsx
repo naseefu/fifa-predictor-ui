@@ -49,6 +49,13 @@ function ChatBubble({ content, mentions }: { content: string; mentions: string[]
   return <div className="ff-bubble">{parts}</div>;
 }
 
+const getAvatarColor = (name: string) => {
+  const colors = ['#FF4B2B', '#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export default function FanFightRoom() {
   const router = useRouter();
   const [messages, setMessages] = useState<FanFightMsg[]>([]);
@@ -106,22 +113,17 @@ export default function FanFightRoom() {
 
   async function initRoom() {
     try {
-      // 1. Fetch push status
       const status = await getFanFightPushStatus();
       setPushEnabled(status);
 
-      // 2. Load historical messages from Node backend
       const res = await fetch(`${CHAT_URL}/messages`);
       if (res.ok) {
         const history = await res.json();
         setMessages(history);
       }
 
-      // 3. Connect Socket.io
       const token = getToken();
-      const s = io(CHAT_URL, {
-        auth: { token },
-      });
+      const s = io(CHAT_URL, { auth: { token } });
 
       s.on('connect', () => console.log('Connected to Fan Fight'));
       s.on('newMessage', (msg: FanFightMsg) => setMessages(prev => [...prev, msg]));
@@ -139,7 +141,7 @@ export default function FanFightRoom() {
     try {
       await toggleFanFightPush(newState);
     } catch (e) {
-      setPushEnabled(!newState); // revert on fail
+      setPushEnabled(!newState);
     }
   }
 
@@ -147,7 +149,6 @@ export default function FanFightRoom() {
     e.preventDefault();
     if (!text.trim() || !socket) return;
     
-    // Extract mentions to send explicitly
     const mentionRegex = /@([\w-]+)/g;
     const extractedMentions = [];
     let match;
@@ -163,7 +164,6 @@ export default function FanFightRoom() {
     closeDropdown();
   }
 
-  // Mention input handlers
   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
     const caret = e.target.selectionStart ?? val.length;
@@ -224,79 +224,93 @@ export default function FanFightRoom() {
   return (
     <>
       <Navbar />
-      <main className="page fan-fight-page">
-        <div className="ff-header">
-          <div>
-            <h1 className="ff-title">⚔️ Fan Fight Room</h1>
-            <p className="ff-subtitle">Global live chat. Clears every day at 10:30 AM IST.</p>
-          </div>
-          <button 
-            className={`btn-toggle-push ${pushEnabled ? 'on' : 'off'}`} 
-            onClick={togglePush}
-            title="Toggle push notifications for this room"
-          >
-            {pushEnabled ? '🔕 Mute Room' : '🔔 Unmute Room'}
-          </button>
-        </div>
-
-        <div className="ff-container card">
-          <div className="ff-messages" ref={scrollRef}>
-            {messages.length === 0 ? (
-              <div className="ff-empty">The room is empty. Start the banter!</div>
-            ) : (
-              messages.map(m => {
-                const isMe = m.username === me?.username;
-                return (
-                  <div key={m.id} className={`ff-msg fade-up ${isMe ? 'ff-mine' : 'ff-theirs'}`}>
-                    {!isMe && (
-                      <div className="ff-avatar">
-                        {m.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="ff-msg-content">
-                      <div className="ff-meta">
-                        <span className="ff-user">{isMe ? 'You' : m.username}</span>
-                        <span className="ff-time">{formatTime(m.created_at)}</span>
-                      </div>
-                      <ChatBubble content={m.content} mentions={m.mentions} />
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          <div style={{ position: 'relative' }}>
-            {showDropdown && suggestions.length > 0 && (
-              <div className="mention-dropdown">
-                {suggestions.map((name, i) => (
-                  <div key={name} className={`mention-option${i === activeSuggestion ? ' active' : ''}`}
-                    onMouseDown={(e) => { e.preventDefault(); insertMention(name); }}
-                    onMouseEnter={() => setActiveSuggestion(i)}>
-                    <span className="mention-at">@</span>
-                    <span className="mention-name">{name}</span>
-                  </div>
-                ))}
+      <div className="ff-wrapper">
+        <main className="ff-page-modern">
+          <div className="ff-header-modern">
+            <div className="ff-header-info">
+              <div className="ff-icon-wrapper">⚔️</div>
+              <div>
+                <h1 className="ff-title-modern">Fan Fight</h1>
+                <p className="ff-subtitle-modern">Global banter clears at 10:30 AM IST</p>
               </div>
-            )}
-            <form className="ff-form" onSubmit={handleSend}>
-              <input
-                ref={inputRef}
-                className="ff-input"
-                placeholder="Talk trash... use @ to mention"
-                value={text}
-                onChange={handleInput}
-                onKeyDown={handleKeyDown}
-                onBlur={() => setTimeout(closeDropdown, 150)}
-                maxLength={500}
-              />
-              <button className="ff-send" type="submit" disabled={!text.trim() || !socket}>
-                Send
-              </button>
-            </form>
+            </div>
+            <button 
+              className={`btn-push-modern ${pushEnabled ? 'active' : ''}`} 
+              onClick={togglePush}
+              title={pushEnabled ? "Mute Room" : "Unmute Room"}
+            >
+              <span className="push-icon">{pushEnabled ? '🔕' : '🔔'}</span>
+            </button>
           </div>
-        </div>
-      </main>
+
+          <div className="ff-container-modern">
+            <div className="ff-messages-modern" ref={scrollRef}>
+              {messages.length === 0 ? (
+                <div className="ff-empty-modern">
+                  <div className="empty-icon">🏟️</div>
+                  <p>The stands are empty.</p>
+                  <span>Be the first to start the banter!</span>
+                </div>
+              ) : (
+                messages.map(m => {
+                  const isMe = m.username === me?.username;
+                  return (
+                    <div key={m.id} className={`ff-msg-group ${isMe ? 'mine' : 'theirs'}`}>
+                      {!isMe && (
+                        <div className="ff-avatar-modern" style={{ background: getAvatarColor(m.username) }}>
+                          {m.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="ff-msg-content-modern">
+                        <div className="ff-meta-modern">
+                          <span className="ff-user-modern">{isMe ? 'You' : m.username}</span>
+                          <span className="ff-time-modern">{formatTime(m.created_at)}</span>
+                        </div>
+                        <ChatBubble content={m.content} mentions={m.mentions} />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="ff-input-area">
+              {showDropdown && suggestions.length > 0 && (
+                <div className="mention-dropdown-modern">
+                  {suggestions.map((name, i) => (
+                    <div key={name} className={`mention-item ${i === activeSuggestion ? 'active' : ''}`}
+                      onMouseDown={(e) => { e.preventDefault(); insertMention(name); }}
+                      onMouseEnter={() => setActiveSuggestion(i)}>
+                      <div className="mention-item-avatar" style={{ background: getAvatarColor(name) }}>
+                        {name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="mention-name">{name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <form className="ff-form-modern" onSubmit={handleSend}>
+                <input
+                  ref={inputRef}
+                  className="ff-input-modern"
+                  placeholder="Drop some banter... Use @ to mention"
+                  value={text}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+                  onBlur={() => setTimeout(closeDropdown, 150)}
+                  maxLength={500}
+                />
+                <button className="ff-send-modern" type="submit" disabled={!text.trim() || !socket}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        </main>
+      </div>
     </>
   );
 }
