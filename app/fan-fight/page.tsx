@@ -244,15 +244,25 @@ export default function FanFightRoom() {
             {messages.length === 0 ? (
               <div className="ff-empty">The room is empty. Start the banter!</div>
             ) : (
-              messages.map(m => (
-                <div key={m.id} className="ff-msg fade-up">
-                  <div className="ff-meta">
-                    <span className="ff-user">{m.username}</span>
-                    <span className="ff-time">{formatTime(m.created_at)}</span>
+              messages.map(m => {
+                const isMe = m.username === me?.username;
+                return (
+                  <div key={m.id} className={`ff-msg fade-up ${isMe ? 'ff-mine' : 'ff-theirs'}`}>
+                    {!isMe && (
+                      <div className="ff-avatar">
+                        {m.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="ff-msg-content">
+                      <div className="ff-meta">
+                        <span className="ff-user">{isMe ? 'You' : m.username}</span>
+                        <span className="ff-time">{formatTime(m.created_at)}</span>
+                      </div>
+                      <ChatBubble content={m.content} mentions={m.mentions} />
+                    </div>
                   </div>
-                  <ChatBubble content={m.content} mentions={m.mentions} />
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
