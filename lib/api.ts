@@ -36,6 +36,25 @@ export interface LeaderboardEntry {
   exactMatches: number;
   correctOutcomes: number;
   totalPredictions: number;
+  currentStreak: number;
+  bestStreak: number;
+  rankMovement: number | null;
+}
+
+export interface UserStatsResponse {
+  username: string;
+  rank: number;
+  totalPoints: number;
+  totalPredictions: number;
+  exactMatches: number;
+  correctOutcomes: number;
+  wrongPredictions: number;
+  winRate: number;
+  avgPointsPerMatch: number;
+  currentStreak: number;
+  bestStreak: number;
+  rankMovement: number | null;
+  badges: string[];
 }
 
 export interface AuthResponse {
@@ -60,6 +79,7 @@ export interface CommentResponse {
   username: string;
   content: string;
   createdAt: string;
+  mentions: string[];
 }
 
 // ── Core fetch wrapper ───────────────────────────────────────────────────────
@@ -183,6 +203,12 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   return apiFetch('/api/leaderboard');
 }
 
+// ── User Stats ───────────────────────────────────────────────────────────────
+
+export async function getUserStats(): Promise<UserStatsResponse> {
+  return apiFetch('/api/stats/me');
+}
+
 // ── Admin ────────────────────────────────────────────────────────────────────
 
 export async function adminGetAllMatches(): Promise<MatchResponse[]> {
@@ -248,6 +274,14 @@ export async function postMatchComment(matchId: number, content: string): Promis
     method: 'POST',
     body: JSON.stringify({ content }),
   });
+}
+
+/**
+ * Returns up to 8 approved usernames matching the @mention query.
+ * Used for the autocomplete dropdown in the comment box.
+ */
+export async function getMentionSuggestions(query: string): Promise<string[]> {
+  return apiFetch(`/api/users/mention-search?q=${encodeURIComponent(query)}`);
 }
 
 export async function subscribeToPush(subscription: any): Promise<void> {

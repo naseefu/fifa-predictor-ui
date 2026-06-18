@@ -6,6 +6,26 @@ interface Props {
   entries: LeaderboardEntry[];
 }
 
+function MovementBadge({ movement }: { movement: number | null }) {
+  if (movement === null) {
+    return <span className="movement-badge new">NEW</span>;
+  }
+  if (movement > 0) {
+    return <span className="movement-badge up">▲ {movement}</span>;
+  }
+  if (movement < 0) {
+    return <span className="movement-badge down">▼ {Math.abs(movement)}</span>;
+  }
+  return <span className="movement-badge same">—</span>;
+}
+
+function StreakBadge({ streak }: { streak: number }) {
+  if (streak <= 0) return null;
+  if (streak >= 5) return <span className="streak-pill fire">🔥 {streak}</span>;
+  if (streak >= 3) return <span className="streak-pill warm">⚡ {streak}</span>;
+  return <span className="streak-pill cool">✦ {streak}</span>;
+}
+
 export default function LeaderboardTable({ entries }: Props) {
   const me = getUser();
 
@@ -35,11 +55,13 @@ export default function LeaderboardTable({ entries }: Props) {
           <thead>
             <tr>
               <th style={{ width:48 }}>#</th>
+              <th style={{ width:40 }}></th>
               <th>Player</th>
               <th className="right">Points</th>
               <th className="right">Exact ⭐</th>
               <th className="right">Correct ✓</th>
               <th className="right">Played</th>
+              <th className="right">Streak</th>
             </tr>
           </thead>
           <tbody>
@@ -56,6 +78,9 @@ export default function LeaderboardTable({ entries }: Props) {
                     </span>
                   </td>
                   <td>
+                    <MovementBadge movement={entry.rankMovement ?? null} />
+                  </td>
+                  <td>
                     <span className="username-cell">
                       {entry.username}
                       {isMe && (
@@ -68,6 +93,9 @@ export default function LeaderboardTable({ entries }: Props) {
                   <td className="right stat-cell">{entry.exactMatches}</td>
                   <td className="right stat-cell">{entry.correctOutcomes}</td>
                   <td className="right stat-cell">{entry.totalPredictions}</td>
+                  <td className="right stat-cell">
+                    <StreakBadge streak={entry.currentStreak} />
+                  </td>
                 </tr>
               );
             })}
