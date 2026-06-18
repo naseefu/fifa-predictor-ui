@@ -218,3 +218,9 @@ export async function adminRemoveUser(userId: number): Promise<void> {
     method: 'DELETE',
   });
 }
+
+export async function adminResetScore(userId: number): Promise<void> {
+  return apiFetch(`/api/admin/users/${userId}/reset-score`, {
+    method: 'POST',
+  });
+}

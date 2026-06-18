@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminGetAllUsers, adminApproveUser, adminRemoveUser } from '@/lib/api';
+import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore } from '@/lib/api';
 import type { MatchResponse, UserResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin } from '@/lib/auth';
 import { TEAM_LIST, getFlag } from '@/lib/teams';
@@ -89,6 +89,16 @@ export default function AdminDashboardPage() {
       await loadUsers();
     } catch (e: any) {
       alert(e.message || 'Failed to remove user');
+    }
+  }
+
+  async function handleResetScore(userId: number) {
+    if (!confirm('Are you ABSOLUTELY sure you want to reset this user\'s score to 0? This cannot be undone.')) return;
+    try {
+      await adminResetScore(userId);
+      await loadUsers();
+    } catch (e: any) {
+      alert(e.message || 'Failed to reset score');
     }
   }
 
@@ -363,7 +373,10 @@ export default function AdminDashboardPage() {
                                  Approve
                                </button>
                              )}
-                             <button className="btn-ghost-sm" onClick={() => handleRemoveUser(u.id)} style={{ padding: '5px 10px', fontSize: '.7rem' }}>
+                             <button className="btn-ghost-sm" onClick={() => handleResetScore(u.id)} style={{ padding: '5px 10px', fontSize: '.7rem', color: 'var(--amber)' }}>
+                               Reset Score
+                             </button>
+                             <button className="btn-ghost-sm" onClick={() => handleRemoveUser(u.id)} style={{ padding: '5px 10px', fontSize: '.7rem', color: 'var(--red)' }}>
                                Remove
                              </button>
                            </div>
