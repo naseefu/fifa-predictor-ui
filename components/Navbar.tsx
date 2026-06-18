@@ -8,6 +8,7 @@ const userLinks = [
   { href: '/history', label: 'History', icon: '⏱' },
   { href: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
   { href: '/stats', label: 'My Stats', icon: '📊' },
+  { href: '/fan-fight', label: 'Fan Fight', icon: '⚔️' },
 ];
 
 const adminLinks = [

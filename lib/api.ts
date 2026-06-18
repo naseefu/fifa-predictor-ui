@@ -284,6 +284,16 @@ export async function getMentionSuggestions(query: string): Promise<string[]> {
   return apiFetch(`/api/users/mention-search?q=${encodeURIComponent(query)}`);
 }
 
+export async function getFanFightPushStatus(): Promise<boolean> {
+  return apiFetch('/api/users/me/fan-fight-push');
+}
+
+export async function toggleFanFightPush(enabled: boolean): Promise<void> {
+  return apiFetch(`/api/users/me/fan-fight-push?enabled=${enabled}`, {
+    method: 'PUT',
+  });
+}
+
 export async function subscribeToPush(subscription: any): Promise<void> {
   return apiFetch('/api/notifications/subscribe', {
     method: 'POST',
