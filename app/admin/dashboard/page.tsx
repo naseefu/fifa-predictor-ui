@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminDeleteMatch, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore } from '@/lib/api';
+import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminDeleteMatch, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore, adminSendNotification } from '@/lib/api';
 import type { MatchResponse, UserResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin } from '@/lib/auth';
 import { TEAM_LIST, getFlag } from '@/lib/teams';
@@ -16,7 +16,7 @@ function formatDT(iso: string) {
 export default function AdminDashboardPage() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'matches'|'users'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches'|'users'|'communications'>('matches');
 
   // Match list
   const [matches,  setMatches]  = useState<MatchResponse[]>([]);
@@ -41,6 +41,17 @@ export default function AdminDashboardPage() {
   const [resultB, setResultB]   = useState<Record<number,string>>({});
   const [submitMsg, setSubmitMsg] = useState<Record<number,string>>({});
   const [submitting, setSubmitting] = useState<Record<number,boolean>>({});
+
+  // Communications
+  const [notifTarget, setNotifTarget] = useState<'all' | 'specific'>('all');
+  const [notifUserIds, setNotifUserIds] = useState<number[]>([]);
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifEmail, setNotifEmail] = useState(true);
+  const [notifPush, setNotifPush] = useState(false);
+  const [notifSending, setNotifSending] = useState(false);
+  const [notifOk, setNotifOk] = useState('');
+  const [notifErr, setNotifErr] = useState('');
 
   useEffect(() => {
     if (!isLoggedIn() || !isAdmin()) { router.push('/login'); return; }
@@ -154,6 +165,42 @@ export default function AdminDashboardPage() {
     }
   }
 
+  async function handleSendNotification(e: React.FormEvent) {
+    e.preventDefault();
+    setNotifErr(''); setNotifOk('');
+    if (!notifTitle.trim() || !notifMessage.trim()) {
+      setNotifErr('Title and Message are required.');
+      return;
+    }
+    if (!notifEmail && !notifPush) {
+      setNotifErr('Select at least one delivery method (Email or Push).');
+      return;
+    }
+    if (notifTarget === 'specific' && notifUserIds.length === 0) {
+      setNotifErr('Select at least one user.');
+      return;
+    }
+    
+    setNotifSending(true);
+    try {
+      await adminSendNotification({
+        userIds: notifTarget === 'all' ? [] : notifUserIds,
+        title: notifTitle,
+        message: notifMessage,
+        sendEmail: notifEmail,
+        sendPush: notifPush
+      });
+      setNotifOk('Notification sent successfully!');
+      setNotifTitle('');
+      setNotifMessage('');
+      setNotifUserIds([]);
+    } catch (e: any) {
+      setNotifErr(e.message || 'Failed to send notification.');
+    } finally {
+      setNotifSending(false);
+    }
+  }
+
   const pending   = matches.filter(m => m.status !== 'COMPLETED');
   const completed = matches.filter(m => m.status === 'COMPLETED');
 
@@ -188,6 +235,15 @@ export default function AdminDashboardPage() {
               borderBottom: activeTab === 'users' ? '2px solid var(--accent)' : '2px solid transparent'
             }}>
             Users ({users.filter(u => !u.isApprovedByAdmin).length > 0 ? '!' : ''})
+          </button>
+          <button 
+            onClick={() => setActiveTab('communications')}
+            style={{ 
+              background: 'none', border: 'none', color: activeTab === 'communications' ? 'var(--text)' : 'var(--text-faint)', 
+              fontWeight: 700, padding: '10px 4px', fontSize: '1rem', cursor: 'pointer',
+              borderBottom: activeTab === 'communications' ? '2px solid var(--accent)' : '2px solid transparent'
+            }}>
+            Communications
           </button>
         </div>
 
@@ -412,7 +468,68 @@ export default function AdminDashboardPage() {
                </div>
              )}
           </div>
-        )}
+         )}
+
+         {activeTab === 'communications' && (
+           <div className="card admin-form-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+             <div className="admin-heading">Send Custom Notification</div>
+             {notifErr && <div className="error-msg">{notifErr}</div>}
+             {notifOk  && <div className="success-msg">{notifOk}</div>}
+
+             <form onSubmit={handleSendNotification}>
+               <div style={{ marginBottom: 14 }}>
+                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Target Audience</div>
+                 <select className="form-input-dark" value={notifTarget} onChange={e => setNotifTarget(e.target.value as 'all'|'specific')}>
+                   <option value="all">All Users</option>
+                   <option value="specific">Specific Users</option>
+                 </select>
+               </div>
+               
+               {notifTarget === 'specific' && (
+                 <div style={{ marginBottom: 14 }}>
+                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Select Users</div>
+                   <select className="form-input-dark" multiple value={notifUserIds.map(String)} onChange={e => {
+                     const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                     setNotifUserIds(selected);
+                   }} style={{ height: '120px' }}>
+                     {users.map(u => (
+                       <option key={u.id} value={u.id}>{u.username} ({u.email})</option>
+                     ))}
+                   </select>
+                   <div style={{ fontSize:'.7rem', color:'var(--text-faint)', marginTop: 4 }}>Hold Cmd/Ctrl to select multiple.</div>
+                 </div>
+               )}
+
+               <div style={{ marginBottom: 14 }}>
+                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Title</div>
+                 <input className="form-input-dark" type="text" value={notifTitle} onChange={e => setNotifTitle(e.target.value)} required placeholder="E.g. Tournament Update!" />
+               </div>
+
+               <div style={{ marginBottom: 14 }}>
+                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Message</div>
+                 <textarea className="form-input-dark" rows={5} value={notifMessage} onChange={e => setNotifMessage(e.target.value)} required placeholder="Write your message here..."></textarea>
+               </div>
+
+               <div style={{ marginBottom: 20 }}>
+                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Delivery Method</div>
+                 <div style={{ display: 'flex', gap: '16px' }}>
+                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                     <input type="checkbox" checked={notifEmail} onChange={e => setNotifEmail(e.target.checked)} />
+                     <span>Email</span>
+                   </label>
+                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                     <input type="checkbox" checked={notifPush} onChange={e => setNotifPush(e.target.checked)} />
+                     <span>Push Notification</span>
+                   </label>
+                 </div>
+               </div>
+
+               <button className="btn-accent-sm w-full" type="submit" disabled={notifSending} style={{ width:'100%' }}>
+                 {notifSending ? 'Sending…' : '📨 Send Notification'}
+               </button>
+             </form>
+           </div>
+         )}
       </main>
     </>
   );

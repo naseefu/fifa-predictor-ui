@@ -256,3 +256,10 @@ export async function subscribeToPush(subscription: any): Promise<void> {
     body: JSON.stringify(subscription),
   });
 }
+
+export async function adminSendNotification(request: { userIds?: number[], title: string, message: string, sendEmail: boolean, sendPush: boolean }): Promise<void> {
+  return apiFetch('/api/admin/notifications/send', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
