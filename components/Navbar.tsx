@@ -31,9 +31,10 @@ export default function Navbar() {
       <nav className="navbar">
         <div className="navbar-inner">
           {/* Logo */}
-          <div className="navbar-logo" style={{ cursor: 'pointer' }}
+          <div className="navbar-logo" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
             onClick={() => router.push(user ? (isAdmin() ? '/admin/dashboard' : '/dashboard') : '/login')}>
-            ⚽ <span>THE FINAL</span>&nbsp;THIRD
+            ⚽
+            <div><span>THE FINAL</span>&nbsp;THIRD</div>
           </div>
 
           {/* Nav links */}
