@@ -14,6 +14,7 @@ const userLinks = [
 const adminLinks = [
   { href: '/admin/dashboard', label: 'Admin', icon: '⚙️' },
   { href: '/leaderboard', label: 'Leaderboard', icon: '🏆' },
+  { href: '/fan-fight', label: 'Fan Fight', icon: '⚔️' },
 ];
 
 export default function Navbar() {
