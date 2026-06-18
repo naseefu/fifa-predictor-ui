@@ -79,7 +79,7 @@ export default function LandingPage() {
               </div>
               <div className="hero-stat-divider" />
               <div className="hero-stat">
-                <span className="hero-stat-num">60<span style={{fontSize:'1rem'}}>min</span></span>
+                <span className="hero-stat-num">60<span style={{ fontSize: '1rem' }}>min</span></span>
                 <span className="hero-stat-label">Prediction Lockout</span>
               </div>
               <div className="hero-stat-divider" />
@@ -93,8 +93,8 @@ export default function LandingPage() {
           {/* Floating badge */}
           <div className="hero-float-card">
             <div className="hfc-label">
-              {latestMatch 
-                ? (latestMatch.status === 'COMPLETED' ? 'Latest Match' : 'Live Match') 
+              {latestMatch
+                ? (latestMatch.status === 'COMPLETED' ? 'Latest Match' : 'Live Match')
                 : 'Live Match'}
             </div>
             <div className="hfc-teams">
@@ -105,8 +105,8 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="hfc-score">
-                {latestMatch && latestMatch.status === 'COMPLETED' 
-                  ? `${latestMatch.teamAScore} — ${latestMatch.teamBScore}` 
+                {latestMatch && latestMatch.status === 'COMPLETED'
+                  ? `${latestMatch.teamAScore} — ${latestMatch.teamBScore}`
                   : (latestMatch ? 'vs' : '3 — 1')}
               </div>
               <div className="hfc-team">
@@ -117,9 +117,9 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="hfc-pred">
-              {latestMatch && latestMatch.status === 'COMPLETED' 
+              {latestMatch && latestMatch.status === 'COMPLETED'
                 ? `Actual Winner: ${latestMatch.actualWinner === 'DRAW' ? 'Draw' : (latestMatch.actualWinner === 'TEAM_A' ? latestMatch.teamA : latestMatch.teamB)}`
-                : (latestMatch ? 'Predictions locking soon!' : <>Your prediction: France · GD 2 → <span style={{color:'var(--accent)'}}>+7.5 pts</span></>)}
+                : (latestMatch ? 'Predictions locking soon!' : <>Your prediction: France · GD 2 → <span style={{ color: 'var(--accent)' }}>+7.5 pts</span></>)}
             </div>
           </div>
         </section>
@@ -193,7 +193,7 @@ export default function LandingPage() {
                 ['1', '3', '2', '5.0'],
                 ['0', '3', '3', '2.5'],
                 ['Wrong winner', '—', '—', '0'],
-              ].map(([a,b,c,d], i) => (
+              ].map(([a, b, c, d], i) => (
                 <div key={i} className={`scoring-row${i === 0 ? ' perfect' : i === 4 ? ' zero' : ''}`}>
                   <span>{a}</span><span>{b}</span><span>{c}</span>
                   <span className="scoring-pts">{d}</span>
@@ -211,12 +211,12 @@ export default function LandingPage() {
 
             <div className="features-grid">
               {[
-                { icon:'⏱', title:'Live Countdown', desc:'Real-time lockout timers — cards auto-transition from editable to locked without page refreshes.' },
-                { icon:'📅', title:'10:30 AM Window', desc:"Today's matches span a custom 24-hour window: 10:30 AM today to 10:30 AM tomorrow." },
-                { icon:'🔒', title:'Enforced Lockout', desc:'Predictions blocked server-side 60 minutes before kick-off. No backdating allowed.' },
-                { icon:'⚡', title:'Instant Settlement', desc:'Admin submits final score → scoring engine processes all predictions in a single transaction.' },
-                { icon:'📊', title:'Rich History', desc:'Full record of past predictions, points earned, and match results in a clean timeline.' },
-                { icon:'🥇', title:'Smart Tie-Breaker', desc:'Equal points? Ranked by exact goal diff predictions, then correct outcomes, then account age.' },
+                { icon: '⏱', title: 'Live Countdown', desc: 'Real-time lockout timers — cards auto-transition from editable to locked without page refreshes.' },
+                { icon: '📅', title: '10:30 AM Window', desc: "Today's matches span a custom 24-hour window: 10:30 AM today to 10:30 AM tomorrow." },
+                { icon: '🔒', title: 'Enforced Lockout', desc: 'Predictions blocked server-side 60 minutes before kick-off. No backdating allowed.' },
+                { icon: '⚡', title: 'Instant Settlement', desc: 'Admin submits final score → scoring engine processes all predictions in a single transaction.' },
+                { icon: '📊', title: 'Rich History', desc: 'Full record of past predictions, points earned, and match results in a clean timeline.' },
+                { icon: '🥇', title: 'Smart Tie-Breaker', desc: 'Equal points? Ranked by exact goal diff predictions, then correct outcomes, then account age.' },
               ].map((f, i) => (
                 <div key={i} className="feature-card">
                   <div className="feature-icon">{f.icon}</div>
@@ -238,12 +238,12 @@ export default function LandingPage() {
               Join the predictor league. Prove your football knowledge match by match.
             </p>
             <button className="lnd-btn-hero" onClick={() => router.push('/register')}
-              style={{ fontSize:'1rem', padding:'14px 36px' }}>
+              style={{ fontSize: '1rem', padding: '14px 36px' }}>
               Create Free Account →
             </button>
-            <div style={{ marginTop:16, fontSize:'.83rem', color:'var(--text-faint)' }}>
+            <div style={{ marginTop: 16, fontSize: '.83rem', color: 'var(--text-faint)' }}>
               Already have an account?{' '}
-              <span style={{ color:'var(--accent)', cursor:'pointer', fontWeight:600 }}
+              <span style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}
                 onClick={() => router.push('/login')}>Sign in here</span>
             </div>
           </div>
@@ -252,8 +252,8 @@ export default function LandingPage() {
         {/* ── Footer ──────────────────────────────────────────────────── */}
         <footer className="landing-footer">
           <div className="landing-footer-inner">
-            <div className="landing-logo" style={{ fontSize:'.9rem' }}>⚽ <span>THE FINAL</span> THIRD</div>
-            <div style={{ fontSize:'.78rem', color:'var(--text-faint)' }}>
+            <div className="landing-logo" style={{ fontSize: '.9rem' }}>⚽ <span>THE FINAL</span> THIRD</div>
+            <div style={{ fontSize: '.78rem', color: 'var(--text-faint)' }}>
               Predict · Score · Dominate — Built with Spring Boot & Next.js
             </div>
           </div>

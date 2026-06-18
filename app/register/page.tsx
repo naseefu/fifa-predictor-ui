@@ -5,22 +5,22 @@ import { register, verifyOtp } from '@/lib/api';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [step, setStep]         = useState<'REGISTER' | 'OTP'>('REGISTER');
+  const [step, setStep] = useState<'REGISTER' | 'OTP'>('REGISTER');
   const [username, setUsername] = useState('');
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm]   = useState('');
-  const [otpCode, setOtpCode]   = useState('');
-  
-  const [error, setError]       = useState('');
-  const [success, setSuccess]   = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError(''); setSuccess('');
     if (password !== confirm) { setError('Passwords do not match.'); return; }
-    if (password.length < 6)  { setError('Password must be at least 6 characters.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setLoading(true);
     try {
       const res = await register(username, email, password);
@@ -59,7 +59,7 @@ export default function RegisterPage() {
         <h1 className="auth-title">Get started</h1>
         <p className="auth-subtitle">Register to start predicting match scores.</p>
 
-        {error   && <div className="error-msg">{error}</div>}
+        {error && <div className="error-msg">{error}</div>}
         {success && <div className="success-msg">{success}</div>}
 
         {step === 'REGISTER' ? (

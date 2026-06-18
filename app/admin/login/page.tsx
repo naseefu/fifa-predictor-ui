@@ -6,11 +6,11 @@ import { setToken } from '@/lib/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername]     = useState('');
-  const [password, setPassword]     = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [adminSecret, setAdminSecret] = useState('');
-  const [error, setError]           = useState('');
-  const [loading, setLoading]       = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
