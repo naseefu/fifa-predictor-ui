@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore } from '@/lib/api';
+import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminDeleteMatch, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore } from '@/lib/api';
 import type { MatchResponse, UserResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin } from '@/lib/auth';
 import { TEAM_LIST, getFlag } from '@/lib/teams';
@@ -99,6 +99,16 @@ export default function AdminDashboardPage() {
       await loadUsers();
     } catch (e: any) {
       alert(e.message || 'Failed to reset score');
+    }
+  }
+
+  async function handleDeleteMatch(matchId: number) {
+    if (!confirm('Are you sure you want to permanently delete this match and all predictions associated with it?')) return;
+    try {
+      await adminDeleteMatch(matchId);
+      await loadMatches();
+    } catch (e: any) {
+      alert(e.message || 'Failed to delete match');
     }
   }
 
@@ -266,6 +276,12 @@ export default function AdminDashboardPage() {
                           onClick={() => handleSubmitResult(m.id)}>
                           {submitting[m.id] ? '…' : 'Submit'}
                         </button>
+                        <button className="btn-ghost-sm" 
+                          onClick={() => handleDeleteMatch(m.id)}
+                          style={{ padding: '0 8px', color: 'var(--red)', fontSize: '1rem' }}
+                          title="Delete Match">
+                          🗑️
+                        </button>
                       </div>
                       {submitMsg[m.id] && (
                         <div style={{ fontSize:'.75rem', textAlign:'right',
@@ -296,9 +312,17 @@ export default function AdminDashboardPage() {
                       </div>
                       <div className="admin-match-meta">{formatDT(m.startTime)}</div>
                     </div>
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontWeight:900, fontSize:'1.1rem', color:'var(--text)' }}>
-                        {m.teamAScore} — {m.teamBScore}
+                    <div style={{ textAlign:'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ fontWeight:900, fontSize:'1.1rem', color:'var(--text)' }}>
+                          {m.teamAScore} — {m.teamBScore}
+                        </div>
+                        <button className="btn-ghost-sm" 
+                          onClick={() => handleDeleteMatch(m.id)}
+                          style={{ padding: '0 4px', color: 'var(--red)', fontSize: '1rem' }}
+                          title="Delete Match">
+                          🗑️
+                        </button>
                       </div>
                       <div style={{ fontSize:'.72rem', color:'var(--blue)', fontWeight:600 }}>
                         ✓ Settled

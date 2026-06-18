@@ -192,6 +192,12 @@ export async function adminCreateMatch(
   });
 }
 
+export async function adminDeleteMatch(matchId: number): Promise<void> {
+  return apiFetch(`/api/admin/matches/${matchId}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function adminSubmitResult(
   matchId: number,
   teamAScore: number,

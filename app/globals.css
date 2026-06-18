@@ -501,6 +501,7 @@ input, select, textarea { font-family: inherit; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  html { font-size: 14px; }
   body { padding-bottom: 70px; } /* Space for bottom nav */
   .admin-grid { grid-template-columns: 1fr; }
   .admin-form-card { position: static; margin-bottom: 24px; }
