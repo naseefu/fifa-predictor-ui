@@ -11,8 +11,8 @@ self.addEventListener('push', function(event) {
   const title = payload.title || 'The Final Third';
   const options = {
     body: payload.body || 'You have a new update!',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/api/icon-192',
+    badge: '/api/icon-192',
     data: { url: payload.url || '/' }
   };
 
