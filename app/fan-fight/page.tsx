@@ -95,7 +95,7 @@ export default function FanFightRoom() {
 
   // Mention debounce
   useEffect(() => {
-    if (!showDropdown || mentionQuery.length === 0) {
+    if (!showDropdown) {
       setSuggestions([]);
       return;
     }

@@ -70,7 +70,7 @@ export default function MatchComments({ matchId }: { matchId: number }) {
 
   // Fetch suggestions whenever mentionQuery changes
   useEffect(() => {
-    if (!showDropdown || mentionQuery.length === 0) {
+    if (!showDropdown) {
       setSuggestions([]);
       return;
     }
