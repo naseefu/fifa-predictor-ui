@@ -99,29 +99,42 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   if (!res.ok) {
     let msg = `HTTP ${res.status} ${res.statusText}`;
     try {
-      const contentType = res.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const body = await res.json();
-        msg = body?.message || body?.error || msg;
-      } else {
-        const text = await res.text();
-        if (text && !text.startsWith('<html')) {
-          msg = text;
-        } else if (res.status === 403) {
-          if (path.includes('/login')) {
-            msg = "Invalid username or password.";
-          } else {
-            msg = "Access Denied: You don't have permission to perform this action.";
-          }
-        } else if (res.status === 401) {
-          if (path.includes('/login')) {
-            msg = "Invalid username or password.";
-          } else {
-            msg = "Session Expired: Please log in again.";
-          }
+      const text = await res.text();
+      let parsed: any = null;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        // Not JSON
+      }
+
+      if (parsed && typeof parsed === 'object') {
+        msg = parsed.message || parsed.error || msg;
+      } else if (parsed && typeof parsed === 'string') {
+        msg = parsed;
+      } else if (text && !text.startsWith('<html')) {
+        msg = text;
+      } else if (res.status === 403) {
+        if (path.includes('/login')) {
+          msg = "Invalid username or password.";
+        } else {
+          msg = "Access Denied: You don't have permission to perform this action.";
+        }
+      } else if (res.status === 401) {
+        if (path.includes('/login')) {
+          msg = "Invalid username or password.";
+        } else {
+          msg = "Session Expired: Please log in again.";
         }
       }
     } catch { /* keep default message */ }
+
+    // Clean up any surrounding quotes from the final error message
+    if (typeof msg === 'string') {
+      msg = msg.trim();
+      while ((msg.startsWith('"') && msg.endsWith('"')) || (msg.startsWith("'") && msg.endsWith("'"))) {
+        msg = msg.slice(1, -1).trim();
+      }
+    }
     throw new Error(msg);
   }
 
