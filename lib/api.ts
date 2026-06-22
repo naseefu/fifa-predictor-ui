@@ -1,6 +1,6 @@
 import { getToken } from './auth';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fifa-predictor-node.onrender.com';
 const CHAT_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || 'http://localhost:4000';
 
 // ── Types ────────────────────────────────────────────────────────────────────

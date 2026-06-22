@@ -43,6 +43,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
   const [msg, setMsg]         = useState('');
   const [isError, setIsError] = useState(false);
   const [localPred, setLocalPred] = useState(match.userPrediction);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [insight, setInsight] = useState('');
   const [insightLoading, setInsightLoading] = useState(false);
@@ -235,13 +236,40 @@ export default function MatchCard({ match, onUpdated }: Props) {
             </div>
 
             <button className={`btn-save${saving ? ' saving' : ''}`}
-              onClick={handleSave} disabled={saving || !predWinner || effectiveLocked}>
+              onClick={() => {
+                if (!predWinner) { setIsError(true); setMsg('Select a result.'); return; }
+                setShowConfirm(true);
+              }} disabled={saving || !predWinner || effectiveLocked}>
               {saving ? 'Saving…' : 'Submit Prediction'}
             </button>
             {msg && (
               <div style={{ marginTop:8, textAlign:'center', fontSize:'.8rem',
                 color: isError ? 'var(--red)' : 'var(--accent)' }}>
                 {msg}
+              </div>
+            )}
+
+            {showConfirm && (
+              <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+                <div className="modal-content" onClick={e => e.stopPropagation()}>
+                  <h3 className="modal-title">Confirm Prediction</h3>
+                  <div className="modal-body">
+                    Are you sure you want to submit this prediction?<br /><br />
+                    <strong style={{ color: 'var(--text)' }}>{winnerLabel(predWinner, match.teamA, match.teamB)}</strong>
+                    {' '}· GD <strong style={{ color: 'var(--text)' }}>{predWinner === 'DRAW' ? 0 : (predGD === 4 ? '3+' : predGD)}</strong>
+                  </div>
+                  <div className="modal-actions">
+                    <button className="btn-cancel" onClick={() => setShowConfirm(false)}>
+                      Cancel
+                    </button>
+                    <button className="btn-confirm" onClick={() => {
+                      setShowConfirm(false);
+                      handleSave();
+                    }}>
+                      Yes, Submit
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
