@@ -44,6 +44,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
   const [isError, setIsError] = useState(false);
   const [localPred, setLocalPred] = useState(match.userPrediction);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [insight, setInsight] = useState('');
   const [insightLoading, setInsightLoading] = useState(false);
@@ -77,6 +78,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
       setLocalPred(resp);
       setMsg('Prediction saved ✓');
       setIsError(false);
+      setIsEditing(false);
       if (onUpdated) onUpdated({ ...match, userPrediction: resp });
     } catch (e: any) {
       setIsError(true);
@@ -190,7 +192,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
         )}
 
         {/* Prediction form (open only) */}
-        {!effectiveLocked && !localPred && (
+        {!effectiveLocked && (!localPred || isEditing) && (
           <div className="prediction-form">
             <div className="prediction-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span>Your Prediction</span>
@@ -276,7 +278,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
         )}
 
         {/* Prediction already submitted (but match not yet started) */}
-        {!effectiveLocked && localPred && (
+        {!effectiveLocked && localPred && !isEditing && (
           <div className="prediction-result" style={{ background: 'rgba(52, 211, 153, 0.05)', borderColor: 'rgba(52, 211, 153, 0.2)' }}>
             <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '.85rem', marginBottom: 4, textAlign: 'center' }}>
               ✓ Prediction Submitted
@@ -289,6 +291,22 @@ export default function MatchCard({ match, onUpdated }: Props) {
                 {localPred.predictedGoalDiff === 4 ? '3+' : localPred.predictedGoalDiff}
               </strong>
             </div>
+            <button
+              onClick={() => setIsEditing(true)}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--accent)',
+                color: 'var(--accent)',
+                padding: '4px 12px',
+                borderRadius: '99px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                marginTop: '10px',
+                cursor: 'pointer'
+              }}
+            >
+              Edit Prediction
+            </button>
           </div>
         )}
 
