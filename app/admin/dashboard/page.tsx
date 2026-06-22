@@ -377,6 +377,7 @@ export default function AdminDashboardPage() {
                       </div>
                       <div className="admin-match-meta">{formatDT(m.startTime)}</div>
                     </div>
+                    <div style={{ textAlign:'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       {!editingScore[m.id] ? (
                         <>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -386,8 +387,8 @@ export default function AdminDashboardPage() {
                             {isWithin24Hours(m.startTime) && (
                               <button className="btn-ghost-sm"
                                 onClick={() => {
-                                  setResultA(p => ({ ...p, [m.id]: m.teamAScore.toString() }));
-                                  setResultB(p => ({ ...p, [m.id]: m.teamBScore.toString() }));
+                                  setResultA(p => ({ ...p, [m.id]: (m.teamAScore ?? 0).toString() }));
+                                  setResultB(p => ({ ...p, [m.id]: (m.teamBScore ?? 0).toString() }));
                                   setEditingScore(p => ({ ...p, [m.id]: true }));
                                 }}
                                 style={{ padding: '0 4px', color: 'var(--accent)', fontSize: '.8rem' }}
