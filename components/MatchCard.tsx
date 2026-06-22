@@ -279,7 +279,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
 
         {/* Prediction already submitted (but match not yet started) */}
         {!effectiveLocked && localPred && !isEditing && (
-          <div className="prediction-result" style={{ background: 'rgba(52, 211, 153, 0.05)', borderColor: 'rgba(52, 211, 153, 0.2)' }}>
+          <div className="prediction-result editable" style={{ background: 'rgba(52, 211, 153, 0.05)', borderColor: 'rgba(52, 211, 153, 0.2)' }}>
             <div style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '.85rem', marginBottom: 4, textAlign: 'center' }}>
               ✓ Prediction Submitted
             </div>
@@ -293,17 +293,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
             </div>
             <button
               onClick={() => setIsEditing(true)}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--accent)',
-                color: 'var(--accent)',
-                padding: '4px 12px',
-                borderRadius: '99px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                marginTop: '10px',
-                cursor: 'pointer'
-              }}
+              className="btn-edit"
             >
               Edit Prediction
             </button>

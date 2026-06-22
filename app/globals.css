@@ -642,6 +642,31 @@ textarea {
   justify-content: space-between;
 }
 
+.prediction-result.editable {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  text-align: center;
+}
+
+.btn-edit {
+  width: 100%;
+  margin-top: 6px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  padding: 10px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-edit:hover {
+  background: var(--accent-glow);
+}
+
 .prediction-info {
   font-size: .8rem;
   color: var(--text-muted);
