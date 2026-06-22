@@ -255,7 +255,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
                   <h3 className="modal-title">Confirm Prediction</h3>
                   <div className="modal-body">
                     Are you sure you want to submit this prediction?<br /><br />
-                    <strong style={{ color: 'var(--text)' }}>{winnerLabel(predWinner, match.teamA, match.teamB)}</strong>
+                    <strong style={{ color: 'var(--text)' }}>{winnerLabel(predWinner as Winner, match.teamA, match.teamB)}</strong>
                     {' '}· GD <strong style={{ color: 'var(--text)' }}>{predWinner === 'DRAW' ? 0 : (predGD === 4 ? '3+' : predGD)}</strong>
                   </div>
                   <div className="modal-actions">
