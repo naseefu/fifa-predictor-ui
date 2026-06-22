@@ -41,6 +41,7 @@ export default function AdminDashboardPage() {
   const [resultB, setResultB]   = useState<Record<number,string>>({});
   const [submitMsg, setSubmitMsg] = useState<Record<number,string>>({});
   const [submitting, setSubmitting] = useState<Record<number,boolean>>({});
+  const [editingScore, setEditingScore] = useState<Record<number,boolean>>({});
 
   // Communications
   const [notifTarget, setNotifTarget] = useState<'all' | 'specific'>('all');
@@ -157,12 +158,20 @@ export default function AdminDashboardPage() {
     try {
       await adminSubmitResult(matchId, a, b);
       setSubmitMsg(p => ({ ...p, [matchId]: '✓ Result saved & scores processed' }));
+      setEditingScore(p => ({ ...p, [matchId]: false }));
       await loadMatches();
     } catch (e: any) {
       setSubmitMsg(p => ({ ...p, [matchId]: e.message || 'Failed to submit result.' }));
     } finally {
       setSubmitting(p => ({ ...p, [matchId]: false }));
     }
+  }
+
+  function isWithin24Hours(isoTime: string) {
+    const d = new Date(isoTime);
+    const now = new Date();
+    const diffHours = Math.abs(now.getTime() - d.getTime()) / (1000 * 60 * 60);
+    return diffHours <= 24;
   }
 
   async function handleSendNotification(e: React.FormEvent) {
@@ -368,21 +377,66 @@ export default function AdminDashboardPage() {
                       </div>
                       <div className="admin-match-meta">{formatDT(m.startTime)}</div>
                     </div>
-                    <div style={{ textAlign:'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ fontWeight:900, fontSize:'1.1rem', color:'var(--text)' }}>
-                          {m.teamAScore} — {m.teamBScore}
+                      {!editingScore[m.id] ? (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ fontWeight:900, fontSize:'1.1rem', color:'var(--text)' }}>
+                              {m.teamAScore} — {m.teamBScore}
+                            </div>
+                            {isWithin24Hours(m.startTime) && (
+                              <button className="btn-ghost-sm"
+                                onClick={() => {
+                                  setResultA(p => ({ ...p, [m.id]: m.teamAScore.toString() }));
+                                  setResultB(p => ({ ...p, [m.id]: m.teamBScore.toString() }));
+                                  setEditingScore(p => ({ ...p, [m.id]: true }));
+                                }}
+                                style={{ padding: '0 4px', color: 'var(--accent)', fontSize: '.8rem' }}
+                                title="Edit Score">
+                                ✏️ Edit
+                              </button>
+                            )}
+                            <button className="btn-ghost-sm" 
+                              onClick={() => handleDeleteMatch(m.id)}
+                              style={{ padding: '0 4px', color: 'var(--red)', fontSize: '1rem' }}
+                              title="Delete Match">
+                              🗑️
+                            </button>
+                          </div>
+                          <div style={{ fontSize:'.72rem', color:'var(--blue)', fontWeight:600 }}>
+                            ✓ Settled
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <div className="result-inputs" style={{ marginBottom:6 }}>
+                            <input className="result-score-input" type="number" min={0} max={20}
+                              placeholder="0"
+                              value={resultA[m.id] ?? ''}
+                              onChange={e => setResultA(p => ({ ...p, [m.id]: e.target.value }))} />
+                            <span style={{ color:'var(--text-faint)', fontWeight:700 }}>—</span>
+                            <input className="result-score-input" type="number" min={0} max={20}
+                              placeholder="0"
+                              value={resultB[m.id] ?? ''}
+                              onChange={e => setResultB(p => ({ ...p, [m.id]: e.target.value }))} />
+                            <button className="btn-accent-sm"
+                              disabled={submitting[m.id]}
+                              onClick={() => handleSubmitResult(m.id)}>
+                              {submitting[m.id] ? '…' : 'Save'}
+                            </button>
+                            <button className="btn-ghost-sm"
+                              onClick={() => setEditingScore(p => ({ ...p, [m.id]: false }))}
+                              style={{ padding: '0 8px', color: 'var(--text-muted)' }}>
+                              Cancel
+                            </button>
+                          </div>
+                          {submitMsg[m.id] && (
+                            <div style={{ fontSize:'.75rem', textAlign:'right',
+                              color: submitMsg[m.id].startsWith('✓') ? 'var(--accent)' : 'var(--red)' }}>
+                              {submitMsg[m.id]}
+                            </div>
+                          )}
                         </div>
-                        <button className="btn-ghost-sm" 
-                          onClick={() => handleDeleteMatch(m.id)}
-                          style={{ padding: '0 4px', color: 'var(--red)', fontSize: '1rem' }}
-                          title="Delete Match">
-                          🗑️
-                        </button>
-                      </div>
-                      <div style={{ fontSize:'.72rem', color:'var(--blue)', fontWeight:600 }}>
-                        ✓ Settled
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}
