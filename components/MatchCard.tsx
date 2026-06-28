@@ -35,7 +35,7 @@ function winnerLabel(w: Winner | null | undefined, teamA: string, teamB: string)
 export default function MatchCard({ match, onUpdated }: Props) {
   const startTime   = new Date(match.startTime);
   const lockTime    = new Date(startTime.getTime() - 60 * 60 * 1000);
-  const isKnockout  = match.isKnockout;
+  const isKnockout  = match.isKnockout || (match as any).knockout;
 
   const [now, setNow]         = useState(() => Date.now());
   const [predWinner, setPredWinner] = useState<Winner | ''>('');

@@ -162,14 +162,15 @@ export default function AdminDashboardPage() {
       return;
     }
     // For knockout matches with tied scores, require a penalty winner
-    if (match.isKnockout && a === b && !penaltyWinner[matchId]) {
+    const isMatchKnockout = match.isKnockout || (match as any).knockout;
+    if (isMatchKnockout && a === b && !penaltyWinner[matchId]) {
       setSubmitMsg(p => ({ ...p, [matchId]: 'Knockout match tied — select penalty winner.' }));
       return;
     }
     setSubmitting(p => ({ ...p, [matchId]: true }));
     setSubmitMsg(p => ({ ...p, [matchId]: '' }));
     try {
-      const pen = match.isKnockout && a === b ? (penaltyWinner[matchId] as 'TEAM_A' | 'TEAM_B') : undefined;
+      const pen = isMatchKnockout && a === b ? (penaltyWinner[matchId] as 'TEAM_A' | 'TEAM_B') : undefined;
       await adminSubmitResult(matchId, a, b, pen);
       setSubmitMsg(p => ({ ...p, [matchId]: '✓ Result saved & scores processed' }));
       setEditingScore(p => ({ ...p, [matchId]: false }));
@@ -400,7 +401,7 @@ export default function AdminDashboardPage() {
                         </button>
                       </div>
                       {/* Penalty winner selector — shown for knockout matches when scores are tied */}
-                      {m.isKnockout && (
+                      {(m.isKnockout || (m as any).knockout) && (
                         (() => {
                           const a = parseInt(resultA[m.id] ?? 'x');
                           const b = parseInt(resultB[m.id] ?? 'x');
@@ -459,7 +460,8 @@ export default function AdminDashboardPage() {
                                 onClick={() => {
                                   setResultA(p => ({ ...p, [m.id]: (m.teamAScore ?? 0).toString() }));
                                   setResultB(p => ({ ...p, [m.id]: (m.teamBScore ?? 0).toString() }));
-                                  if (m.isKnockout && m.actualGoalDiff === 0 && m.actualWinner && m.actualWinner !== 'DRAW') {
+                                  const isMKnockout = m.isKnockout || (m as any).knockout;
+                                  if (isMKnockout && m.actualGoalDiff === 0 && m.actualWinner && m.actualWinner !== 'DRAW') {
                                     setPenaltyWinner(p => ({ ...p, [m.id]: m.actualWinner as 'TEAM_A' | 'TEAM_B' }));
                                   }
                                   setEditingScore(p => ({ ...p, [m.id]: true }));
@@ -504,7 +506,7 @@ export default function AdminDashboardPage() {
                             </button>
                           </div>
                           {/* Penalty winner selector for knockout edit */}
-                          {m.isKnockout && (
+                          {(m.isKnockout || (m as any).knockout) && (
                             (() => {
                               const a = parseInt(resultA[m.id] ?? 'x');
                               const b = parseInt(resultB[m.id] ?? 'x');
