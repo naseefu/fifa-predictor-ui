@@ -459,6 +459,9 @@ export default function AdminDashboardPage() {
                                 onClick={() => {
                                   setResultA(p => ({ ...p, [m.id]: (m.teamAScore ?? 0).toString() }));
                                   setResultB(p => ({ ...p, [m.id]: (m.teamBScore ?? 0).toString() }));
+                                  if (m.isKnockout && m.actualGoalDiff === 0 && m.actualWinner && m.actualWinner !== 'DRAW') {
+                                    setPenaltyWinner(p => ({ ...p, [m.id]: m.actualWinner as 'TEAM_A' | 'TEAM_B' }));
+                                  }
                                   setEditingScore(p => ({ ...p, [m.id]: true }));
                                 }}
                                 style={{ padding: '0 4px', color: 'var(--accent)', fontSize: '.8rem' }}
