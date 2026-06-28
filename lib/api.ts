@@ -183,6 +183,11 @@ export async function getTodayMatches(): Promise<MatchResponse[]> {
   return apiFetch('/api/matches/today');
 }
 
+/** Returns all UPCOMING matches starting after today's 10:30 AM window ends */
+export async function getUpcomingMatches(): Promise<MatchResponse[]> {
+  return apiFetch('/api/matches/upcoming');
+}
+
 export async function getHistory(): Promise<MatchResponse[]> {
   return apiFetch('/api/matches/history');
 }

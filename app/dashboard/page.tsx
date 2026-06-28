@@ -4,13 +4,14 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import MatchCard from '@/components/MatchCard';
 import PushSetupComponent from '@/components/PushSetupComponent';
-import { getTodayMatches } from '@/lib/api';
+import { getTodayMatches, getUpcomingMatches } from '@/lib/api';
 import type { MatchResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin, getUser } from '@/lib/auth';
 
 export default function DashboardPage() {
   const router  = useRouter();
   const [matches, setMatches] = useState<MatchResponse[]>([]);
+  const [upcoming, setUpcoming] = useState<MatchResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
   const user = getUser();
@@ -24,8 +25,12 @@ export default function DashboardPage() {
   async function load() {
     setLoading(true); setError('');
     try {
-      const data = await getTodayMatches();
-      setMatches(data);
+      const [todayData, upcomingData] = await Promise.all([
+        getTodayMatches(),
+        getUpcomingMatches(),
+      ]);
+      setMatches(todayData);
+      setUpcoming(upcomingData);
     } catch (e: any) {
       setError(e.message || 'Failed to load matches.');
     } finally {
@@ -80,7 +85,7 @@ export default function DashboardPage() {
 
         <PushSetupComponent />
 
-        {!loading && matches.length === 0 && (
+        {!loading && matches.length === 0 && upcoming.length === 0 && (
           <div className="empty-state">
             <div className="empty-icon">📅</div>
             <div>No matches scheduled for today's window.</div>
@@ -116,10 +121,34 @@ export default function DashboardPage() {
 
         {/* Completed today */}
         {completed.length > 0 && (
-          <div>
+          <div style={{ marginBottom:28 }}>
             <div className="section-label">Completed Today ({completed.length})</div>
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               {completed.map(m => (
+                <MatchCard key={m.id} match={m} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upcoming future matches — beyond today's window */}
+        {!loading && upcoming.length > 0 && (
+          <div style={{ marginTop: matches.length > 0 ? 12 : 0 }}>
+            <div className="section-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Upcoming Fixtures
+              <span style={{
+                fontSize: '.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '99px',
+                background: 'rgba(16,185,129,.1)', color: 'var(--accent)',
+                border: '1px solid rgba(16,185,129,.2)', letterSpacing: '.05em'
+              }}>
+                {upcoming.length} match{upcoming.length !== 1 ? 'es' : ''} · Pre-predict now
+              </span>
+            </div>
+            <p style={{ fontSize: '.8rem', color: 'var(--text-faint)', marginBottom: '12px', marginTop: '-4px' }}>
+              These matches start after tomorrow 10:30 AM. Lock in your predictions early!
+            </p>
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {upcoming.map(m => (
                 <MatchCard key={m.id} match={m} />
               ))}
             </div>
