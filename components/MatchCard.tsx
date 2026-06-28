@@ -242,14 +242,26 @@ export default function MatchCard({ match, onUpdated }: Props) {
             
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 16 }}>
               <select className="form-input-dark" style={{ width: '150px' }}
-                value={predWinner} onChange={e => setPredWinner(e.target.value as Winner)}>
+                value={predWinner ? (isKnockout && predGD === 0 ? predWinner + '_PEN' : predWinner) : ''}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val.endsWith('_PEN')) {
+                    setPredWinner(val.replace('_PEN', '') as Winner);
+                    setPredGD(0);
+                  } else {
+                    setPredWinner(val as Winner);
+                    if (isKnockout && predGD === 0) setPredGD(1);
+                  }
+                }}>
                 <option value="" disabled>Select Result</option>
                 <option value="TEAM_A">{match.teamA} Win</option>
+                {isKnockout && <option value="TEAM_A_PEN">{match.teamA} Win (Pen)</option>}
                 {!isKnockout && <option value="DRAW">Draw</option>}
                 <option value="TEAM_B">{match.teamB} Win</option>
+                {isKnockout && <option value="TEAM_B_PEN">{match.teamB} Win (Pen)</option>}
               </select>
 
-              {predWinner && predWinner !== 'DRAW' && (
+              {predWinner && predWinner !== 'DRAW' && !(isKnockout && predGD === 0) && (
                 <select className="form-input-dark" style={{ width: '130px' }}
                   value={predGD} onChange={e => setPredGD(parseInt(e.target.value))}>
                   <option value={1}>Goal Diff: 1</option>
@@ -258,7 +270,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
                   <option value={4}>Goal Diff: 3+</option>
                 </select>
               )}
-              {predWinner === 'DRAW' && (
+              {(predWinner === 'DRAW' || (isKnockout && predGD === 0 && predWinner !== '')) && (
                 <div style={{ display:'flex', alignItems:'center', color:'var(--text-faint)', fontSize:'.85rem' }}>
                   Goal Diff: 0
                 </div>
@@ -285,8 +297,11 @@ export default function MatchCard({ match, onUpdated }: Props) {
                   <h3 className="modal-title">Confirm Prediction</h3>
                   <div className="modal-body">
                     Are you sure you want to submit this prediction?<br /><br />
-                    <strong style={{ color: 'var(--text)' }}>{winnerLabel(predWinner as Winner, match.teamA, match.teamB)}</strong>
-                    {' '}· GD <strong style={{ color: 'var(--text)' }}>{predWinner === 'DRAW' ? 0 : (predGD === 4 ? '3+' : predGD)}</strong>
+                    <strong style={{ color: 'var(--text)' }}>
+                      {winnerLabel(predWinner as Winner, match.teamA, match.teamB)}
+                      {isKnockout && predGD === 0 ? ' (Pen)' : ''}
+                    </strong>
+                    {' '}· GD <strong style={{ color: 'var(--text)' }}>{predWinner === 'DRAW' || (isKnockout && predGD === 0) ? 0 : (predGD === 4 ? '3+' : predGD)}</strong>
                   </div>
                   <div className="modal-actions">
                     <button className="btn-cancel" onClick={() => setShowConfirm(false)}>
@@ -314,6 +329,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
             <div className="prediction-info">
               <strong style={{ color:'var(--text-2)' }}>
                 {winnerLabel(localPred.predictedWinner, match.teamA, match.teamB)}
+                {isKnockout && localPred.predictedGoalDiff === 0 && localPred.predictedWinner !== 'DRAW' ? ' (Pen)' : ''}
               </strong>{' '}
               · GD <strong style={{ color:'var(--text-2)' }}>
                 {localPred.predictedGoalDiff === 4 ? '3+' : localPred.predictedGoalDiff}
@@ -335,6 +351,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
               Your prediction:{' '}
               <strong style={{ color:'var(--text-2)' }}>
                 {winnerLabel(localPred.predictedWinner, match.teamA, match.teamB)}
+                {isKnockout && localPred.predictedGoalDiff === 0 && localPred.predictedWinner !== 'DRAW' ? ' (Pen)' : ''}
               </strong>{' '}
               · GD: <strong style={{ color:'var(--text-2)' }}>
                 {localPred.predictedGoalDiff === 4 ? '3+' : localPred.predictedGoalDiff}
@@ -351,6 +368,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
               Locked prediction:{' '}
               <strong style={{ color:'var(--text-2)' }}>
                 {winnerLabel(localPred.predictedWinner, match.teamA, match.teamB)}
+                {isKnockout && localPred.predictedGoalDiff === 0 && localPred.predictedWinner !== 'DRAW' ? ' (Pen)' : ''}
                 {' '}· GD {localPred.predictedGoalDiff === 4 ? '3+' : localPred.predictedGoalDiff}
               </strong>
             </div>
