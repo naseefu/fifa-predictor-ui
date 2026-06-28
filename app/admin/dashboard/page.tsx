@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminDeleteMatch, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore, adminSendNotification } from '@/lib/api';
+import { adminGetAllMatches, adminCreateMatch, adminSubmitResult, adminDeleteMatch, adminGetAllUsers, adminApproveUser, adminRemoveUser, adminResetScore, adminSendNotification, adminSendMatchDigest } from '@/lib/api';
 import type { MatchResponse, UserResponse } from '@/lib/api';
 import { isLoggedIn, isAdmin } from '@/lib/auth';
 import { TEAM_LIST, getFlag } from '@/lib/teams';
@@ -53,6 +53,12 @@ export default function AdminDashboardPage() {
   const [notifSending, setNotifSending] = useState(false);
   const [notifOk, setNotifOk] = useState('');
   const [notifErr, setNotifErr] = useState('');
+
+  // Match Digest Push
+  const [digestEmails, setDigestEmails] = useState<string[]>([]);
+  const [digestSending, setDigestSending] = useState(false);
+  const [digestOk, setDigestOk] = useState('');
+  const [digestErr, setDigestErr] = useState('');
 
   useEffect(() => {
     if (!isLoggedIn() || !isAdmin()) { router.push('/login'); return; }
@@ -207,6 +213,25 @@ export default function AdminDashboardPage() {
       setNotifErr(e.message || 'Failed to send notification.');
     } finally {
       setNotifSending(false);
+    }
+  }
+
+  async function handleSendMatchDigest(e: React.FormEvent) {
+    e.preventDefault();
+    setDigestErr(''); setDigestOk('');
+    if (digestEmails.length === 0) {
+      setDigestErr('Select at least one user to push the digest to.');
+      return;
+    }
+    setDigestSending(true);
+    try {
+      await adminSendMatchDigest(digestEmails);
+      setDigestOk(`✓ Match digest pushed to ${digestEmails.length} user(s) for all upcoming matches (Jun 29 10:30 → Jul 4).`);
+      setDigestEmails([]);
+    } catch (e: any) {
+      setDigestErr(e.message || 'Failed to send match digest.');
+    } finally {
+      setDigestSending(false);
     }
   }
 
@@ -526,63 +551,146 @@ export default function AdminDashboardPage() {
          )}
 
          {activeTab === 'communications' && (
-           <div className="card admin-form-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-             <div className="admin-heading">Send Custom Notification</div>
-             {notifErr && <div className="error-msg">{notifErr}</div>}
-             {notifOk  && <div className="success-msg">{notifOk}</div>}
+           <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-             <form onSubmit={handleSendNotification}>
-               <div style={{ marginBottom: 14 }}>
-                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Target Audience</div>
-                 <select className="form-input-dark" value={notifTarget} onChange={e => setNotifTarget(e.target.value as 'all'|'specific')}>
-                   <option value="all">All Users</option>
-                   <option value="specific">Specific Users</option>
-                 </select>
+             {/* ── Match Digest Push ── */}
+             <div className="card admin-form-card">
+               <div className="admin-heading" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                 📲 Match Digest Push
+                 <span style={{ fontSize: '.7rem', fontWeight: 600, padding: '2px 8px', borderRadius: '99px',
+                   background: 'rgba(16,185,129,.12)', color: 'var(--accent)', border: '1px solid rgba(16,185,129,.25)' }}>
+                   Jun 29 → Jul 4
+                 </span>
                </div>
-               
-               {notifTarget === 'specific' && (
+               <p style={{ fontSize: '.82rem', color: 'var(--text-faint)', marginBottom: '16px', lineHeight: 1.5 }}>
+                 Push all upcoming matches (from tomorrow 10:30 AM through July 4, 2026) to selected users.
+                 Skips today's active window. Safe to re-run — each push is a new notification, no database changes.
+               </p>
+
+               {digestErr && <div className="error-msg">{digestErr}</div>}
+               {digestOk  && <div className="success-msg">{digestOk}</div>}
+
+               <form onSubmit={handleSendMatchDigest}>
                  <div style={{ marginBottom: 14 }}>
-                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Select Users</div>
-                   <select className="form-input-dark" multiple value={notifUserIds.map(String)} onChange={e => {
-                     const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
-                     setNotifUserIds(selected);
-                   }} style={{ height: '120px' }}>
-                     {users.map(u => (
-                       <option key={u.id} value={u.id}>{u.username} ({u.email})</option>
+                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom: 8,
+                     textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Select Users</div>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px',
+                     background: 'var(--surface-2)', borderRadius: '8px', padding: '12px',
+                     border: '1px solid var(--border)', maxHeight: '200px', overflowY: 'auto' }}>
+                     {users.filter(u => u.isApprovedByAdmin).map(u => (
+                       <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '10px',
+                         cursor: 'pointer', padding: '6px 8px', borderRadius: '6px',
+                         background: digestEmails.includes(u.email) ? 'rgba(16,185,129,.08)' : 'transparent',
+                         border: digestEmails.includes(u.email) ? '1px solid rgba(16,185,129,.25)' : '1px solid transparent',
+                         transition: 'all .15s' }}>
+                         <input
+                           type="checkbox"
+                           checked={digestEmails.includes(u.email)}
+                           onChange={e => {
+                             if (e.target.checked) {
+                               setDigestEmails(prev => [...prev, u.email]);
+                             } else {
+                               setDigestEmails(prev => prev.filter(em => em !== u.email));
+                             }
+                           }}
+                           style={{ accentColor: 'var(--accent)', width: '15px', height: '15px', flexShrink: 0 }}
+                         />
+                         <div>
+                           <div style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--text)' }}>{u.username}</div>
+                           <div style={{ fontSize: '.72rem', color: 'var(--text-faint)' }}>{u.email}</div>
+                         </div>
+                       </label>
                      ))}
+                     {users.filter(u => u.isApprovedByAdmin).length === 0 && (
+                       <div style={{ fontSize: '.8rem', color: 'var(--text-faint)', padding: '8px' }}>No approved users found.</div>
+                     )}
+                   </div>
+                   <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                     <button type="button" className="btn-ghost-sm"
+                       onClick={() => setDigestEmails(users.filter(u => u.isApprovedByAdmin).map(u => u.email))}
+                       style={{ fontSize: '.72rem', padding: '4px 10px' }}>
+                       Select All
+                     </button>
+                     <button type="button" className="btn-ghost-sm"
+                       onClick={() => setDigestEmails([])}
+                       style={{ fontSize: '.72rem', padding: '4px 10px' }}>
+                       Clear
+                     </button>
+                     {digestEmails.length > 0 && (
+                       <span style={{ fontSize: '.72rem', color: 'var(--accent)', alignSelf: 'center', marginLeft: 'auto' }}>
+                         {digestEmails.length} selected
+                       </span>
+                     )}
+                   </div>
+                 </div>
+
+                 <button className="btn-accent-sm" type="submit" disabled={digestSending || digestEmails.length === 0}
+                   style={{ width: '100%' }}>
+                   {digestSending ? 'Pushing…' : `📲 Push Match Digest${digestEmails.length > 0 ? ` (${digestEmails.length} user${digestEmails.length > 1 ? 's' : ''})` : ''}`}
+                 </button>
+               </form>
+             </div>
+
+             {/* ── Custom Notification ── */}
+             <div className="card admin-form-card">
+               <div className="admin-heading">Send Custom Notification</div>
+               {notifErr && <div className="error-msg">{notifErr}</div>}
+               {notifOk  && <div className="success-msg">{notifOk}</div>}
+
+               <form onSubmit={handleSendNotification}>
+                 <div style={{ marginBottom: 14 }}>
+                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Target Audience</div>
+                   <select className="form-input-dark" value={notifTarget} onChange={e => setNotifTarget(e.target.value as 'all'|'specific')}>
+                     <option value="all">All Users</option>
+                     <option value="specific">Specific Users</option>
                    </select>
-                   <div style={{ fontSize:'.7rem', color:'var(--text-faint)', marginTop: 4 }}>Hold Cmd/Ctrl to select multiple.</div>
                  </div>
-               )}
+                 
+                 {notifTarget === 'specific' && (
+                   <div style={{ marginBottom: 14 }}>
+                     <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Select Users</div>
+                     <select className="form-input-dark" multiple value={notifUserIds.map(String)} onChange={e => {
+                       const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                       setNotifUserIds(selected);
+                     }} style={{ height: '120px' }}>
+                       {users.map(u => (
+                         <option key={u.id} value={u.id}>{u.username} ({u.email})</option>
+                       ))}
+                     </select>
+                     <div style={{ fontSize:'.7rem', color:'var(--text-faint)', marginTop: 4 }}>Hold Cmd/Ctrl to select multiple.</div>
+                   </div>
+                 )}
 
-               <div style={{ marginBottom: 14 }}>
-                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Title</div>
-                 <input className="form-input-dark" type="text" value={notifTitle} onChange={e => setNotifTitle(e.target.value)} required placeholder="E.g. Tournament Update!" />
-               </div>
-
-               <div style={{ marginBottom: 14 }}>
-                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Message</div>
-                 <textarea className="form-input-dark" rows={5} value={notifMessage} onChange={e => setNotifMessage(e.target.value)} required placeholder="Write your message here..."></textarea>
-               </div>
-
-               <div style={{ marginBottom: 20 }}>
-                 <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Delivery Method</div>
-                 <div style={{ display: 'flex', gap: '16px' }}>
-                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                     <input type="checkbox" checked={notifEmail} onChange={e => setNotifEmail(e.target.checked)} />
-                     <span>Email</span>
-                   </label>
-                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                     <input type="checkbox" checked={notifPush} onChange={e => setNotifPush(e.target.checked)} />
-                     <span>Push Notification</span>
-                   </label>
+                 <div style={{ marginBottom: 14 }}>
+                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Title</div>
+                   <input className="form-input-dark" type="text" value={notifTitle} onChange={e => setNotifTitle(e.target.value)} required placeholder="E.g. Tournament Update!" />
                  </div>
-               </div>
 
-               <button className="btn-accent-sm w-full" type="submit" disabled={notifSending} style={{ width:'100%' }}>
-                 {notifSending ? 'Sending…' : '📨 Send Notification'}
-               </button>
-             </form>
+                 <div style={{ marginBottom: 14 }}>
+                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Message</div>
+                   <textarea className="form-input-dark" rows={5} value={notifMessage} onChange={e => setNotifMessage(e.target.value)} required placeholder="Write your message here..."></textarea>
+                 </div>
+
+                 <div style={{ marginBottom: 20 }}>
+                   <div style={{ fontSize:'.72rem', color:'var(--text-faint)', marginBottom:8, textTransform:'uppercase', letterSpacing:'.06em', fontWeight:600 }}>Delivery Method</div>
+                   <div style={{ display: 'flex', gap: '16px' }}>
+                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                       <input type="checkbox" checked={notifEmail} onChange={e => setNotifEmail(e.target.checked)} />
+                       <span>Email</span>
+                     </label>
+                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                       <input type="checkbox" checked={notifPush} onChange={e => setNotifPush(e.target.checked)} />
+                       <span>Push Notification</span>
+                     </label>
+                   </div>
+                 </div>
+
+                 <button className="btn-accent-sm w-full" type="submit" disabled={notifSending} style={{ width:'100%' }}>
+                   {notifSending ? 'Sending…' : '📨 Send Notification'}
+                 </button>
+               </form>
+             </div>
+
            </div>
          )}
       </main>

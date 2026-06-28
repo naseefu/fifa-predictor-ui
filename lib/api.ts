@@ -333,3 +333,14 @@ export async function adminSendNotification(request: { userIds?: number[], title
     body: JSON.stringify(request),
   });
 }
+
+/**
+ * Sends push notifications for all upcoming matches (outside today's 10:30 window
+ * through July 4, 2026) to the specified users by email address.
+ */
+export async function adminSendMatchDigest(emails: string[]): Promise<void> {
+  return apiFetch('/api/admin/notifications/send-match-digest', {
+    method: 'POST',
+    body: JSON.stringify({ emails }),
+  });
+}
