@@ -32,6 +32,7 @@ export default function AdminDashboardPage() {
   const [teamA,     setTeamA]     = useState('');
   const [teamB,     setTeamB]     = useState('');
   const [startTime, setStartTime] = useState('');
+  const [isKnockout, setIsKnockout] = useState(false);
   const [creating,  setCreating]  = useState(false);
   const [createErr, setCreateErr] = useState('');
   const [createOk,  setCreateOk]  = useState('');
@@ -39,6 +40,7 @@ export default function AdminDashboardPage() {
   // Result submission per match
   const [resultA, setResultA]   = useState<Record<number,string>>({});
   const [resultB, setResultB]   = useState<Record<number,string>>({});
+  const [penaltyWinner, setPenaltyWinner] = useState<Record<number, 'TEAM_A' | 'TEAM_B' | ''>>({});
   const [submitMsg, setSubmitMsg] = useState<Record<number,string>>({});
   const [submitting, setSubmitting] = useState<Record<number,boolean>>({});
   const [editingScore, setEditingScore] = useState<Record<number,boolean>>({});
@@ -141,9 +143,9 @@ export default function AdminDashboardPage() {
     try {
       // Send the literal local time entered by the user without shifting to UTC
       const isoTime = startTime.length === 16 ? startTime + ':00' : startTime;
-      await adminCreateMatch(teamA.trim().toUpperCase(), teamB.trim().toUpperCase(), isoTime);
-      setCreateOk(`Match "${teamA.toUpperCase()} vs ${teamB.toUpperCase()}" created!`);
-      setTeamA(''); setTeamB(''); setStartTime('');
+      await adminCreateMatch(teamA.trim().toUpperCase(), teamB.trim().toUpperCase(), isoTime, isKnockout);
+      setCreateOk(`Match "${teamA.toUpperCase()} vs ${teamB.toUpperCase()}" created${isKnockout ? ' [KNOCKOUT]' : ''}!`);
+      setTeamA(''); setTeamB(''); setStartTime(''); setIsKnockout(false);
       await loadMatches();
     } catch (e: any) {
       setCreateErr(e.message || 'Failed to create match.');
@@ -152,19 +154,26 @@ export default function AdminDashboardPage() {
     }
   }
 
-  async function handleSubmitResult(matchId: number) {
+  async function handleSubmitResult(matchId: number, match: MatchResponse) {
     const a = parseInt(resultA[matchId] ?? '');
     const b = parseInt(resultB[matchId] ?? '');
     if (isNaN(a) || isNaN(b)) {
       setSubmitMsg(p => ({ ...p, [matchId]: 'Enter valid scores.' }));
       return;
     }
+    // For knockout matches with tied scores, require a penalty winner
+    if (match.isKnockout && a === b && !penaltyWinner[matchId]) {
+      setSubmitMsg(p => ({ ...p, [matchId]: 'Knockout match tied — select penalty winner.' }));
+      return;
+    }
     setSubmitting(p => ({ ...p, [matchId]: true }));
     setSubmitMsg(p => ({ ...p, [matchId]: '' }));
     try {
-      await adminSubmitResult(matchId, a, b);
+      const pen = match.isKnockout && a === b ? (penaltyWinner[matchId] as 'TEAM_A' | 'TEAM_B') : undefined;
+      await adminSubmitResult(matchId, a, b, pen);
       setSubmitMsg(p => ({ ...p, [matchId]: '✓ Result saved & scores processed' }));
       setEditingScore(p => ({ ...p, [matchId]: false }));
+      setPenaltyWinner(p => ({ ...p, [matchId]: '' }));
       await loadMatches();
     } catch (e: any) {
       setSubmitMsg(p => ({ ...p, [matchId]: e.message || 'Failed to submit result.' }));
@@ -318,6 +327,23 @@ export default function AdminDashboardPage() {
                   value={startTime} onChange={e => setStartTime(e.target.value)}
                   style={{ colorScheme:'dark' }} required />
               </div>
+              {/* Knockout toggle */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px',
+                cursor: 'pointer', padding: '10px 12px', borderRadius: '8px',
+                background: isKnockout ? 'rgba(245,158,11,.08)' : 'var(--surface-2)',
+                border: isKnockout ? '1px solid rgba(245,158,11,.3)' : '1px solid var(--border)',
+                transition: 'all .15s' }}>
+                <input type="checkbox" checked={isKnockout} onChange={e => setIsKnockout(e.target.checked)}
+                  style={{ accentColor: 'var(--amber)', width: '16px', height: '16px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '.85rem', fontWeight: 700, color: isKnockout ? 'var(--amber)' : 'var(--text)' }}>
+                    🏆 Knockout Stage Match
+                  </div>
+                  <div style={{ fontSize: '.72rem', color: 'var(--text-faint)', marginTop: '2px' }}>
+                    No draws — enables penalty winner selection on result submission
+                  </div>
+                </div>
+              </label>
               <button className="btn-accent-sm w-full" type="submit" disabled={creating}
                 style={{ width:'100%' }}>
                 {creating ? 'Creating…' : '＋ Create Match'}
@@ -363,7 +389,7 @@ export default function AdminDashboardPage() {
                           onChange={e => setResultB(p => ({ ...p, [m.id]: e.target.value }))} />
                         <button className="btn-accent-sm"
                           disabled={submitting[m.id]}
-                          onClick={() => handleSubmitResult(m.id)}>
+                          onClick={() => handleSubmitResult(m.id, m)}>
                           {submitting[m.id] ? '…' : 'Submit'}
                         </button>
                         <button className="btn-ghost-sm" 
@@ -373,6 +399,25 @@ export default function AdminDashboardPage() {
                           🗑️
                         </button>
                       </div>
+                      {/* Penalty winner selector — shown for knockout matches when scores are tied */}
+                      {m.isKnockout && (
+                        (() => {
+                          const a = parseInt(resultA[m.id] ?? 'x');
+                          const b = parseInt(resultB[m.id] ?? 'x');
+                          return !isNaN(a) && !isNaN(b) && a === b ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '.72rem', color: 'var(--amber)', fontWeight: 600 }}>🏆 Pen winner:</span>
+                              <select className="form-input-dark" style={{ flex: 1, fontSize: '.78rem', padding: '4px 8px' }}
+                                value={penaltyWinner[m.id] ?? ''}
+                                onChange={e => setPenaltyWinner(p => ({ ...p, [m.id]: e.target.value as 'TEAM_A' | 'TEAM_B' }))}>
+                                <option value="" disabled>Select…</option>
+                                <option value="TEAM_A">{m.teamA}</option>
+                                <option value="TEAM_B">{m.teamB}</option>
+                              </select>
+                            </div>
+                          ) : null;
+                        })()
+                      )}
                       {submitMsg[m.id] && (
                         <div style={{ fontSize:'.75rem', textAlign:'right',
                           color: submitMsg[m.id].startsWith('✓') ? 'var(--accent)' : 'var(--red)' }}>
@@ -446,7 +491,7 @@ export default function AdminDashboardPage() {
                               onChange={e => setResultB(p => ({ ...p, [m.id]: e.target.value }))} />
                             <button className="btn-accent-sm"
                               disabled={submitting[m.id]}
-                              onClick={() => handleSubmitResult(m.id)}>
+                              onClick={() => handleSubmitResult(m.id, m)}>
                               {submitting[m.id] ? '…' : 'Save'}
                             </button>
                             <button className="btn-ghost-sm"
@@ -455,6 +500,25 @@ export default function AdminDashboardPage() {
                               Cancel
                             </button>
                           </div>
+                          {/* Penalty winner selector for knockout edit */}
+                          {m.isKnockout && (
+                            (() => {
+                              const a = parseInt(resultA[m.id] ?? 'x');
+                              const b = parseInt(resultB[m.id] ?? 'x');
+                              return !isNaN(a) && !isNaN(b) && a === b ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                  <span style={{ fontSize: '.72rem', color: 'var(--amber)', fontWeight: 600 }}>🏆 Pen winner:</span>
+                                  <select className="form-input-dark" style={{ flex: 1, fontSize: '.78rem', padding: '4px 8px' }}
+                                    value={penaltyWinner[m.id] ?? ''}
+                                    onChange={e => setPenaltyWinner(p => ({ ...p, [m.id]: e.target.value as 'TEAM_A' | 'TEAM_B' }))}>
+                                    <option value="" disabled>Select…</option>
+                                    <option value="TEAM_A">{m.teamA}</option>
+                                    <option value="TEAM_B">{m.teamB}</option>
+                                  </select>
+                                </div>
+                              ) : null;
+                            })()
+                          )}
                           {submitMsg[m.id] && (
                             <div style={{ fontSize:'.75rem', textAlign:'right',
                               color: submitMsg[m.id].startsWith('✓') ? 'var(--accent)' : 'var(--red)' }}>

@@ -35,6 +35,7 @@ function winnerLabel(w: Winner | null | undefined, teamA: string, teamB: string)
 export default function MatchCard({ match, onUpdated }: Props) {
   const startTime   = new Date(match.startTime);
   const lockTime    = new Date(startTime.getTime() - 60 * 60 * 1000);
+  const isKnockout  = match.isKnockout;
 
   const [now, setNow]         = useState(() => Date.now());
   const [predWinner, setPredWinner] = useState<Winner | ''>('');
@@ -73,6 +74,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
     if (!predWinner) { setIsError(true); setMsg('Select a result.'); return; }
     setSaving(true); setMsg(''); setIsError(false);
     try {
+      // For knockout: if DRAW somehow selected, treat as 0 GD (should never happen)
       const gd = predWinner === 'DRAW' ? 0 : predGD;
       const resp = await submitPrediction(match.id, predWinner, gd);
       setLocalPred(resp);
@@ -144,7 +146,23 @@ export default function MatchCard({ match, onUpdated }: Props) {
           {' · '}
           {startTime.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })}
         </span>
-        {renderBadge()}
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {isKnockout && (
+            <span style={{
+              fontSize: '.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: '99px',
+              background: 'rgba(245,158,11,.12)', color: 'var(--amber)',
+              border: '1px solid rgba(245,158,11,.3)', letterSpacing: '.06em', textTransform: 'uppercase'
+            }}>🏆 Knockout</span>
+          )}
+          {match.penaltyWon && match.status === 'COMPLETED' && (
+            <span style={{
+              fontSize: '.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: '99px',
+              background: 'rgba(139,92,246,.12)', color: '#a78bfa',
+              border: '1px solid rgba(139,92,246,.3)', letterSpacing: '.06em', textTransform: 'uppercase'
+            }}>🎯 Penalties</span>
+          )}
+          {renderBadge()}
+        </div>
       </div>
 
       <div className="match-card-body">
@@ -205,6 +223,16 @@ export default function MatchCard({ match, onUpdated }: Props) {
               </button>
             </div>
 
+            {isKnockout && (
+              <div style={{
+                fontSize: '.76rem', color: 'var(--amber)', background: 'rgba(245,158,11,.08)',
+                border: '1px solid rgba(245,158,11,.25)', borderRadius: '8px',
+                padding: '7px 12px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px'
+              }}>
+                🏆 Knockout match — no draws. If it goes to penalties, predict who wins.
+              </div>
+            )}
+
             {insight && (
               <div className="insight-box fade-up">
                 <span style={{ fontSize: '1.2rem', marginRight: 8 }}>🤖</span>
@@ -217,7 +245,7 @@ export default function MatchCard({ match, onUpdated }: Props) {
                 value={predWinner} onChange={e => setPredWinner(e.target.value as Winner)}>
                 <option value="" disabled>Select Result</option>
                 <option value="TEAM_A">{match.teamA} Win</option>
-                <option value="DRAW">Draw</option>
+                {!isKnockout && <option value="DRAW">Draw</option>}
                 <option value="TEAM_B">{match.teamB} Win</option>
               </select>
 

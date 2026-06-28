@@ -27,6 +27,8 @@ export interface MatchResponse {
   actualWinner: Winner | null;
   actualGoalDiff: number | null;
   status: MatchStatus;
+  isKnockout: boolean;         // true = knockout round, no DRAW allowed
+  penaltyWon: boolean;         // true = decided by penalties (scores were level)
   userPrediction: PredictionResponse | null;
 }
 
@@ -249,11 +251,12 @@ export async function adminGetAllMatches(): Promise<MatchResponse[]> {
 export async function adminCreateMatch(
   teamA: string,
   teamB: string,
-  startTime: string
+  startTime: string,
+  isKnockout: boolean = false
 ): Promise<MatchResponse> {
   return apiFetch('/api/admin/matches', {
     method: 'POST',
-    body: JSON.stringify({ teamA, teamB, startTime }),
+    body: JSON.stringify({ teamA, teamB, startTime, isKnockout }),
   });
 }
 
@@ -266,11 +269,12 @@ export async function adminDeleteMatch(matchId: number): Promise<void> {
 export async function adminSubmitResult(
   matchId: number,
   teamAScore: number,
-  teamBScore: number
+  teamBScore: number,
+  penaltyWinner?: 'TEAM_A' | 'TEAM_B'
 ): Promise<MatchResponse> {
   return apiFetch(`/api/admin/matches/${matchId}/result`, {
     method: 'POST',
-    body: JSON.stringify({ teamAScore, teamBScore }),
+    body: JSON.stringify({ teamAScore, teamBScore, ...(penaltyWinner ? { penaltyWinner } : {}) }),
   });
 }
 
